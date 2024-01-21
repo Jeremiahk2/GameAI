@@ -33,7 +33,7 @@ int main() {
                 window.close();
             }
         }
-        window.clear(sf::Color(0, 128, 128));
+        window.clear(sf::Color(0, 127, 128));
         rectangle.move(sf::Vector2f(1.f, 0.f));
         window.draw(rectangle);
         window.display();
