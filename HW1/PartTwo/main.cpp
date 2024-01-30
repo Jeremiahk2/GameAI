@@ -7,7 +7,8 @@ int main() {
     sf::RenderWindow window;
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
     window.create(sf::VideoMode(640, 480, desktop.bitsPerPixel), "Game Window", sf::Style::Default);
-    //Set framerate to 100 (ideally)
+    //For this part of the assignment, I simply had SFML try and target 100 frames per second. This delays the "display" method to acheive the cap, which is fine because I'm not moving in terms of time.
+    //For Part Three, I used my own methods, where speed is a function of time.
     window.setFramerateLimit(100);
 
 
