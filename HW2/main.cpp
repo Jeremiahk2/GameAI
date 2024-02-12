@@ -1,4 +1,5 @@
 #include "Timeline.h"
+#include "SteeringBehavior.h"
 
 #include <cstdio>
 #include <iostream>
