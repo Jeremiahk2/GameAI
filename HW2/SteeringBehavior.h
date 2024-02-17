@@ -2,24 +2,18 @@
 #include "SFML/Graphics.hpp"
 #include <SFML/OpenGL.hpp>
 #include <cmath>
-
-#define RDEC 1 //Free parameter. The radius around the target where we start to decelerate
-#define RSAT 1 //Free parameter. The "good enough" range around the target.
-#define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
-#define MAXVEL 1 //Free parameter?
-#define MAXACCEL 1 //Free parameter?
-#define MAXROT 1 //Free parameter
+#include <iostream>
 
 struct SteeringData {
-    sf::Vector2f linear;
-    float angular;
+    sf::Vector2f linear = sf::Vector2f(0, 0);
+    float angular = 0;
 };
 
 struct Kinematic {
-    sf::Vector2f pos;
-    float orientation;
-    sf::Vector2f velocity;
-    float rotation;
+    sf::Vector2f pos = sf::Vector2f(0, 0);
+    float orientation = 0;
+    sf::Vector2f velocity = sf::Vector2f(0, 0);
+    float rotation = 0;
     void update( SteeringData steering,float deltaT) {
         //pos, orient
         pos += velocity * deltaT;
@@ -34,7 +28,8 @@ class SteeringBehavior {
     public:
 
     static float findMagnitude(sf::Vector2f vector) {
-        return ( sqrt( pow( vector.x, 2 ) + pow( vector.y, 2 ) ));
+        float rtn =  sqrt( pow( vector.x, 2 ) + pow( vector.y, 2 ) );
+        return rtn;
     }
 
     virtual SteeringData calculateAcceleration(Kinematic character, Kinematic goal) = 0;
@@ -42,10 +37,12 @@ class SteeringBehavior {
 
 //Class for matching position (X, Y coordinates).
 class PositionMatch : public SteeringBehavior {
+    public:
     SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
 };
 //Class for matching orientation (Direction we are facing).
 class OrientationMatch : public SteeringBehavior {
+    public:
     static float mapToRange(float theta) {
         theta = fmod(theta, 2 * M_PI);
         if (abs(theta) <= M_PI) { //If theta is from -pi to pi
@@ -61,9 +58,11 @@ class OrientationMatch : public SteeringBehavior {
 };
 //Class for matching velocity (position over time).
 class VelocityMatch : public SteeringBehavior {
+    public:
     SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
 };
 //Class for matching rotation (rotational velocity).
 class RotationMatch : public SteeringBehavior {
+    public:
     SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
 };
