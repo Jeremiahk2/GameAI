@@ -32,13 +32,13 @@ class SteeringBehavior {
         return rtn;
     }
 
-    virtual SteeringData calculateAcceleration(Kinematic character, Kinematic goal) = 0;
+    virtual void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) = 0;
 };
 
 //Class for matching position (X, Y coordinates).
 class PositionMatch : public SteeringBehavior {
     public:
-    SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
+    void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching orientation (Direction we are facing).
 class OrientationMatch : public SteeringBehavior {
@@ -54,15 +54,15 @@ class OrientationMatch : public SteeringBehavior {
         return theta + 2 * M_PI; //if theta is less than -pi
     }
 
-    SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
+    void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching velocity (position over time).
 class VelocityMatch : public SteeringBehavior {
     public:
-    SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
+    void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching rotation (rotational velocity).
 class RotationMatch : public SteeringBehavior {
     public:
-    SteeringData calculateAcceleration(Kinematic character, Kinematic goal) override;
+    void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };

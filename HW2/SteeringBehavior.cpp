@@ -1,14 +1,13 @@
 #include "SteeringBehavior.h"
 
-#define RDEC 100 //Free parameter. The radius around the target where we start to decelerate
-#define RSAT 100 //Free parameter. The "good enough" range around the target.
-#define TTTV 3 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
+#define RDEC 200 //Free parameter. The radius around the target where we start to decelerate
+#define RSAT 10 //Free parameter. The "good enough" range around the target.
+#define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
 #define MAXVEL 60 //Free parameter?
 #define MAXACCEL 1 //Free parameter?
 #define MAXROT 1 //Free parameter
 
-SteeringData PositionMatch::calculateAcceleration(Kinematic character, Kinematic goal) {
-    SteeringData steering;
+void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     sf::Vector2f direction = goal.pos - character.pos;
     float distance = findMagnitude(direction);
     float goalSpeed;
@@ -29,17 +28,17 @@ SteeringData PositionMatch::calculateAcceleration(Kinematic character, Kinematic
     }
     goalVelocity *= goalSpeed;
 
-    steering.linear = goalVelocity - character.velocity;
-    steering.linear /= (float)TTTV;
-    return steering;
+    steering->linear = goalVelocity - character.velocity;
+    steering->linear /= (float)TTTV;
 }
 //Actually just Align
-SteeringData OrientationMatch::calculateAcceleration(Kinematic character, Kinematic goal) {
-    SteeringData steering;
+void OrientationMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     float goalRotation;
     float rotation = goal.orientation - character.orientation;
     rotation = mapToRange(rotation);
-    float rotationSize = abs(rotation);
+    std::cout << "1. Steering Angular: " << rotation << std::endl;
+    float rotationSize = fabs(rotation);
+    std::cout << "2. Steering Angular: " << rotationSize << std::endl;
     if (rotationSize < RSAT) {
         goalRotation = 0;
     }
@@ -50,20 +49,23 @@ SteeringData OrientationMatch::calculateAcceleration(Kinematic character, Kinema
         goalRotation = MAXROT * rotationSize/RDEC;
     }
 
-    goalRotation *= rotation/abs(rotation);
-    steering.angular = goalRotation - character.rotation;
-    steering.angular /= (float)TTTV;
-    return steering;
+    if (rotation == 0) {
+        goalRotation *= 0;
+    }
+    else {
+        goalRotation *= rotation/fabs(rotation);
+    }
+    std::cout << "3. Steering Angular: " << goalRotation << std::endl;
+    steering->angular = goalRotation - character.rotation;
+    steering->angular /= (float)TTTV;
+    std::cout << "4. Steering Angular: " << steering->angular << std::endl;
 }
 
-SteeringData VelocityMatch::calculateAcceleration(Kinematic character, Kinematic goal) {
-    SteeringData steering;
-    steering.linear = goal.velocity - character.velocity;
-    steering.linear /= (float)TTTV;
-    return steering;
+void VelocityMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+    steering->linear = goal.velocity - character.velocity;
+    steering->linear /= (float)TTTV;
 }
 
-SteeringData RotationMatch::calculateAcceleration(Kinematic character, Kinematic goal) {
-    SteeringData data;
-    return data;
+void RotationMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+    //nothing for now
 }
