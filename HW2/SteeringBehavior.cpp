@@ -5,7 +5,9 @@
 #define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
 #define MAXVEL 60 //Free parameter?
 #define MAXACCEL 1 //Free parameter?
-#define MAXROT 1 //Free parameter
+#define ANGULARDEC .2
+#define MAXROT 3 //Free parameter
+#define ANGULARSAT 0
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     sf::Vector2f direction = goal.pos - character.pos;
@@ -36,17 +38,15 @@ void OrientationMatch::calculateAcceleration(SteeringData *steering, Kinematic c
     float goalRotation;
     float rotation = goal.orientation - character.orientation;
     rotation = mapToRange(rotation);
-    std::cout << "1. Steering Angular: " << rotation << std::endl;
     float rotationSize = fabs(rotation);
-    std::cout << "2. Steering Angular: " << rotationSize << std::endl;
-    if (rotationSize < RSAT) {
+    if (rotationSize < ANGULARSAT) {
         goalRotation = 0;
     }
-    else if (rotationSize > RDEC) {
+    else if (rotationSize > ANGULARDEC) {
         goalRotation = MAXROT;
     }
     else {
-        goalRotation = MAXROT * rotationSize/RDEC;
+        goalRotation = MAXROT * rotationSize/ANGULARDEC;
     }
 
     if (rotation == 0) {
@@ -55,10 +55,8 @@ void OrientationMatch::calculateAcceleration(SteeringData *steering, Kinematic c
     else {
         goalRotation *= rotation/fabs(rotation);
     }
-    std::cout << "3. Steering Angular: " << goalRotation << std::endl;
     steering->angular = goalRotation - character.rotation;
     steering->angular /= (float)TTTV;
-    std::cout << "4. Steering Angular: " << steering->angular << std::endl;
 }
 
 void VelocityMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {

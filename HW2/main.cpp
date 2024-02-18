@@ -38,14 +38,13 @@ int main() {
     target.pos = character.pos;
     //Create a timeline with a tic size of 10, updating every 10 ms or 100 fps.
     Timeline global;
-    int tic = 1000;
+    int tic = 10;
     Timeline frameTime(&global, tic);
     //CurrentTic starts higher than lastTic so the program starts immediately.
     int64_t currentTic = 0;
     int64_t lastTic = -1;
 
     while (window.isOpen()) {
-
         //Get the current tic.
         currentTic = frameTime.getTime();
         //Only process if we've gone to the next tic (or further).
@@ -66,18 +65,18 @@ int main() {
             //Get orientation angle.
             float theta;
             if ((target.pos - character.pos).x != 0) {
-                theta = atan((target.pos - character.pos).y / (target.pos - character.pos).x);
+                theta = atan2((target.pos - character.pos).y, (target.pos - character.pos).x);
             }
             else {
-                theta = atan((target.pos - character.pos).y);
+                theta = atan2((target.pos - character.pos).y, 0);
             }
             target.orientation = theta;
+            std::cout << "Theta: " << theta << std::endl;
 
             //Update steering
             posMatcher.calculateAcceleration(&steering, character, target);
             orientMatcher.calculateAcceleration(&steering, character, target);
 
-            // std::cout << "Steering Angular: " << steering.angular << std::endl;
             //Update character position and orientation.
             character.update(steering, frameTime.getRealTicLength() * (float)(currentTic - lastTic));
             main.setRotation(character.orientation * (180.0 / M_PI));
