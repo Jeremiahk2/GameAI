@@ -5,9 +5,10 @@
 #define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
 #define MAXVEL 60 //Free parameter?
 #define MAXACCEL 1 //Free parameter?
-#define ANGULARDEC .2
-#define MAXROT 3 //Free parameter
-#define ANGULARSAT 0
+
+#define ANGULARDEC 1
+#define MAXROT .8 //Free parameter
+#define ANGULARSAT .6
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     sf::Vector2f direction = goal.pos - character.pos;

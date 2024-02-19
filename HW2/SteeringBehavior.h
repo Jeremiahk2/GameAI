@@ -45,7 +45,7 @@ class OrientationMatch : public SteeringBehavior {
     public:
     static float mapToRange(float theta) {
         theta = fmod(theta, 2 * M_PI);
-        if (abs(theta) <= M_PI) { //If theta is from -pi to pi
+        if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
             return theta;
         }
         else if (theta > M_PI) { //if theta is greater than pi

@@ -58,7 +58,6 @@ int main() {
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
                         target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                        // std::cout << "Target X: " << target.pos.x << " Target Y: " << target.pos.y << std::endl;
                     }
                 }
             }
@@ -71,7 +70,6 @@ int main() {
                 theta = atan2((target.pos - character.pos).y, 0);
             }
             target.orientation = theta;
-            std::cout << "Theta: " << theta << std::endl;
 
             //Update steering
             posMatcher.calculateAcceleration(&steering, character, target);
