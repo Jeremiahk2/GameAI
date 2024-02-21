@@ -3,12 +3,16 @@
 #define RDEC 200 //Free parameter. The radius around the target where we start to decelerate
 #define RSAT 10 //Free parameter. The "good enough" range around the target.
 #define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
-#define MAXVEL 60 //Free parameter?
+#define MAXVEL 100 //Free parameter?
 #define MAXACCEL 1 //Free parameter?
 
 #define ANGULARDEC 1
 #define MAXROT .8 //Free parameter
 #define ANGULARSAT .6
+
+#define WANDERRATE 5.f
+#define WANDEROFFSET 20.f
+#define WANDERRADIUS 5.f
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     sf::Vector2f direction = goal.pos - character.pos;
@@ -66,5 +70,30 @@ void VelocityMatch::calculateAcceleration(SteeringData *steering, Kinematic char
 }
 
 void RotationMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
-    //nothing for now
+    steering->angular = mapToRange(goal.rotation - character.rotation);
+    steering->angular /= (float)TTTV;
 }
+
+float Wander::randBinomial() {
+    srand(time(0));
+    float first = (float)(rand()) / (float)(RAND_MAX);
+    float second = (float)(rand()) / (float)(RAND_MAX);
+    return first - second;
+}
+
+void Wander::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+    //Update wander orientation
+    float wanderOrientation = randBinomial() * WANDERRATE;
+
+    goal.orientation = wanderOrientation + character.orientation;
+
+    goal.pos = character.pos + WANDEROFFSET * sf::Vector2f(cos(character.orientation), sin(character.orientation));
+    goal.pos += WANDERRADIUS * sf::Vector2f(cos(goal.orientation), sin(goal.orientation));
+
+    OrientationMatch align;
+    align.calculateAcceleration(steering, character, goal);
+
+    PositionMatch arrive;
+    arrive.calculateAcceleration(steering, character, goal);
+}
+

@@ -2,9 +2,113 @@
 #include "SteeringBehavior.h"
 
 #include <cstdio>
+#include <deque>
 #include <iostream>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
+
+//Breadcrumb class
+class crumb : sf::CircleShape
+{
+    public:
+        crumb(int id)
+        {
+            //set initial position and size breadcrumbs   
+            this->id = id;         
+            this->setRadius(10.f);
+            this->setOrigin(10.f, 10.f);
+            this->setFillColor(sf::Color::Red);
+            this->setPosition(-100, -100);
+        }
+
+        //tell breadcrumb to render self, using current render window
+        void draw(sf::RenderWindow* window)
+        {
+            window->draw(*this);
+        }
+
+        //set position of breadcrumb
+        void drop(float x, float y)
+        {
+            this->setPosition(x, y);
+        }
+
+        //set position of breadcrumb
+        void drop(sf::Vector2f position)
+        {
+            this->setPosition(position);
+        }
+
+    private:
+        int id;
+};
+
+class boid
+{
+    public:
+        boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<crumb>* crumbs)
+        {
+            window = w;
+            drop_timer = 15.f;
+            crumb_idx = 0;
+            sprite.setScale(0.05f, 0.05f);
+            sprite.setOrigin(sf::Vector2f(17.0/ .05f, 17.0 / .05f));
+            sprite.setPosition(sf::Vector2f(200.f, 200.f));          
+            sprite.setTexture(tex);
+            sprite.setScale(0.05f, 0.05f);
+            breadcrumbs = crumbs;
+        }
+
+        void draw()
+        {            
+            window->draw(sprite);
+        }  
+
+        void move()
+        {
+            //basic timer for leaving breadcrumbs
+            if (drop_timer > 0)
+            {
+                drop_timer -= 0.1f;
+            }
+            else
+            {
+                drop_timer = 15.f;
+                breadcrumbs->at(crumb_idx).drop(sprite.getPosition());
+
+                if (crumb_idx < 9)
+                    crumb_idx++;
+                else
+                    crumb_idx = 0;
+            }
+        }
+
+        void setPosition (sf::Vector2f newPos) {
+            sprite.setPosition(newPos);
+        }
+
+        sf::Vector2f getPosition() {
+            return sprite.getPosition();
+        }
+
+        void setRotation(float rotation) {
+            sprite.setRotation(rotation);
+        }
+
+    private:
+        //indice variables
+        int crumb_idx;
+        
+        //float variables
+        float drop_timer;
+        
+        //renderable objects
+        sf::Sprite sprite;
+        sf::RenderWindow* window;    
+
+        //point of breadcrumbs
+        std::vector<crumb>* breadcrumbs;
+};
 
 int main() {
     // Create a window with the same pixel depth as the desktop, with 144 frames per second.
@@ -14,25 +118,31 @@ int main() {
     //Set framerate to 100 (ideally)
     window.setFramerateLimit(100);
 
+    //Set up boid texture
     sf::Texture texture;
-    if (!texture.loadFromFile("Assets/boid.png")) {
-        return -1;
+    if (!texture.loadFromFile("Assets/boid.png"))
+    {
+        // error...
     }
 
-    //Set up main sprite.
-    sf::Sprite main;
-    main.setTexture(texture);
-    main.setScale(.05, .05);
-    main.setOrigin(17 / .05, 17 / .05);
-    main.setPosition(sf::Vector2f(main.getGlobalBounds().width, main.getGlobalBounds().width));
+    //Set up bread crumbs
+    std::vector<crumb> breadcrumbs = std::vector<crumb>();
+    for(int i = 0; i < 10; i++)
+    {
+        crumb c(i);
+        breadcrumbs.push_back(c);
+    }
+    //Set up boid
+    boid b = boid(&window, texture, &breadcrumbs);
+
+    std::deque<sf::CircleShape> clickCircles;
 
     Kinematic character;
-    character.pos = main.getPosition();
+    character.pos = b.getPosition();
 
     SteeringData steering;
 
-    PositionMatch posMatcher;
-    OrientationMatch orientMatcher;
+    Wander wander;
 
     Kinematic target;
     target.pos = character.pos;
@@ -55,34 +165,24 @@ int main() {
                 if (event.type == sf::Event::Closed) {
                     window.close();
                 }
-                if (event.type == sf::Event::MouseButtonPressed) {
-                    if (event.mouseButton.button == sf::Mouse::Left) {
-                        target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                    }
-                }
             }
-            //Get orientation angle.
-            float theta;
-            if ((target.pos - character.pos).x != 0) {
-                theta = atan2((target.pos - character.pos).y, (target.pos - character.pos).x);
-            }
-            else {
-                theta = atan2((target.pos - character.pos).y, 0);
-            }
-            target.orientation = theta;
 
             //Update steering
-            posMatcher.calculateAcceleration(&steering, character, target);
-            orientMatcher.calculateAcceleration(&steering, character, target);
+            wander.calculateAcceleration(&steering, character, target);
 
             //Update character position and orientation.
             character.update(steering, frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-            main.setRotation(character.orientation * (180.0 / M_PI));
-            main.setPosition(character.pos);
+            b.setRotation(character.orientation * (180.0 / M_PI));
+            b.setPosition(character.pos);
 
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
-            window.draw(main);
+            b.move();
+            for(int i = 0; i < breadcrumbs.size(); i++)
+            {
+                breadcrumbs[i].draw(&window);
+            }
+            b.draw();
             window.display();
         }
         

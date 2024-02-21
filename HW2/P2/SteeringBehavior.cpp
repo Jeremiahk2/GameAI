@@ -66,5 +66,6 @@ void VelocityMatch::calculateAcceleration(SteeringData *steering, Kinematic char
 }
 
 void RotationMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
-    //nothing for now
+    steering->angular = mapToRange(goal.rotation - character.rotation);
+    steering->angular /= (float)TTTV;
 }
