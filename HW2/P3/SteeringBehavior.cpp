@@ -11,7 +11,7 @@
 #define ANGULARSAT .6
 
 #define WANDERRATE 5.f
-#define WANDEROFFSET 20.f
+#define WANDEROFFSET 100.f
 #define WANDERRADIUS 5.f
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {

@@ -175,6 +175,27 @@ int main() {
             b.setRotation(character.orientation * (180.0 / M_PI));
             b.setPosition(character.pos);
 
+            //Correct boundary violations in X direction.
+            if (b.getPosition().x < 0.f) {
+                // std::cout << "Running One!" << std::endl;
+                b.setPosition(sf::Vector2f(640.f, b.getPosition().y));
+            }
+            else if (b.getPosition().x > 640.f) {
+                // std::cout << "Running Two!" << std::endl;
+                b.setPosition(sf::Vector2f(0.f, b.getPosition().y));
+            }
+            //Correct boundary violations in Y direction.
+            if (b.getPosition().y < 0.f) {
+                // std::cout << "Running Three!" << std::endl;
+                b.setPosition(sf::Vector2f(b.getPosition().x, 480.f));
+            }
+            else if (b.getPosition().y > 480.f) {
+                std::cout << "Running Four!" << std::endl;
+                std::cout << b.getPosition().y << std::endl;
+                b.setPosition(sf::Vector2f(b.getPosition().x, 0.f));
+            }
+            character.pos = b.getPosition();
+
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
             b.move();
