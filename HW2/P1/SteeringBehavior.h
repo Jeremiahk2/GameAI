@@ -64,5 +64,15 @@ class VelocityMatch : public SteeringBehavior {
 //Class for matching rotation (rotational velocity).
 class RotationMatch : public SteeringBehavior {
     public:
+    static float mapToRange(float theta) {
+        theta = fmod(theta, 2 * M_PI);
+        if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
+            return theta;
+        }
+        else if (theta > M_PI) { //if theta is greater than pi
+            return theta - 2 * M_PI;
+        }
+        return theta + 2 * M_PI; //if theta is less than -pi
+    }
     void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };

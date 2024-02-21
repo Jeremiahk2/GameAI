@@ -31,8 +31,7 @@ int main() {
 
     SteeringData steering;
 
-    PositionMatch posMatcher;
-    OrientationMatch orientMatcher;
+    VelocityMatch velMatcher;
 
     Kinematic target;
     target.pos = character.pos;
@@ -43,6 +42,11 @@ int main() {
     //CurrentTic starts higher than lastTic so the program starts immediately.
     int64_t currentTic = 0;
     int64_t lastTic = -1;
+
+    int64_t lastClick = 1;
+    int64_t newClick = 1;
+
+    sf::Vector2f oldPos;
 
     while (window.isOpen()) {
         //Get the current tic.
@@ -57,27 +61,21 @@ int main() {
                 }
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
+                        oldPos = target.pos;
                         target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
+                        lastClick = newClick;
+                        newClick = currentTic;
+
+                        target.velocity = (target.pos - oldPos) / (frameTime.getRealTicLength() * (newClick - lastClick));
                     }
                 }
             }
-            //Get orientation angle.
-            float theta;
-            if ((target.pos - character.pos).x != 0) {
-                theta = atan2((target.pos - character.pos).y, (target.pos - character.pos).x);
-            }
-            else {
-                theta = atan2((target.pos - character.pos).y, 0);
-            }
-            target.orientation = theta;
 
             //Update steering
-            posMatcher.calculateAcceleration(&steering, character, target);
-            orientMatcher.calculateAcceleration(&steering, character, target);
+            velMatcher.calculateAcceleration(&steering, character, target);
 
             //Update character position and orientation.
             character.update(steering, frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-            main.setRotation(character.orientation * (180.0 / M_PI));
             main.setPosition(character.pos);
 
             //Draw to window.

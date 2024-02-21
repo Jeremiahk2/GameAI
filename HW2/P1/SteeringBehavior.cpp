@@ -2,8 +2,8 @@
 
 #define RDEC 200 //Free parameter. The radius around the target where we start to decelerate
 #define RSAT 10 //Free parameter. The "good enough" range around the target.
-#define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
-#define MAXVEL 60 //Free parameter?
+#define TTTV 3 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
+#define MAXVEL 30 //Free parameter?
 #define MAXACCEL 1 //Free parameter?
 
 #define ANGULARDEC 1
@@ -66,5 +66,6 @@ void VelocityMatch::calculateAcceleration(SteeringData *steering, Kinematic char
 }
 
 void RotationMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
-    //nothing for now
+    steering->angular = mapToRange(goal.rotation - character.rotation);
+    steering->angular /= (float)TTTV;
 }
