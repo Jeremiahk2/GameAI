@@ -59,7 +59,8 @@ class boid
             target = TOP_RIGHT;
             position = sf::Vector2f(0, 0);            
             sprite.setTexture(tex);
-            sprite.setScale(0.1f, 0.1f);
+            sprite.setScale(0.05f, 0.1f);
+            sprite.setOrigin()
             breadcrumbs = crumbs;
         }
 

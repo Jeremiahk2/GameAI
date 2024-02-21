@@ -6,6 +6,117 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 
+const sf::Vector2f TOP_RIGHT = sf::Vector2f(550, 0);
+const sf::Vector2f BOT_RIGHT = sf::Vector2f(550, 550);
+const sf::Vector2f BOT_LEFT = sf::Vector2f(0, 550);
+const sf::Vector2f TOP_LEFT = sf::Vector2f(0, 0);
+
+//Breadcrumb class
+class crumb : sf::CircleShape
+{
+    public:
+        crumb(int id)
+        {
+            //set initial position and size breadcrumbs   
+            this->id = id;         
+            this->setRadius(10.f);
+            this->setFillColor(sf::Color::Red);
+            this->setPosition(-100, -100);
+        }
+
+        //tell breadcrumb to render self, using current render window
+        void draw(sf::RenderWindow* window)
+        {
+            window->draw(*this);
+        }
+
+        //set position of breadcrumb
+        void drop(float x, float y)
+        {
+            this->setPosition(x, y);
+        }
+
+        //set position of breadcrumb
+        void drop(sf::Vector2f position)
+        {
+            this->setPosition(position);
+        }
+
+    private:
+        int id;
+};
+
+class boid
+{
+    public:
+        boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<crumb>* crumbs)
+        {
+            window = w;
+            drop_timer = 30.f;
+            crumb_idx = 0;
+            sprite.setScale(0.05f, 0.05f);
+            sprite.setOrigin(sf::Vector2f(17.0/ .05f, 17.0 / .05f));
+            sprite.setPosition(sf::Vector2f(sprite.getGlobalBounds().width, sprite.getGlobalBounds().width));          
+            sprite.setTexture(tex);
+            sprite.setScale(0.05f, 0.05f);
+            breadcrumbs = crumbs;
+        }
+
+        void draw()
+        {            
+            window->draw(sprite);
+        }  
+
+        void move()
+        {
+            //basic timer for leaving breadcrumbs
+            if (drop_timer > 0)
+            {
+                drop_timer -= 0.1f;
+            }
+            else
+            {
+                drop_timer = 100.f;
+                breadcrumbs->at(crumb_idx).drop(sprite.getPosition());
+
+                if (crumb_idx < 9)
+                    crumb_idx++;
+                else
+                    crumb_idx = 0;
+            }
+        }
+
+        void setPosition (sf::Vector2f newPos) {
+            sprite.setPosition(newPos);
+        }
+
+        sf::Vector2f getPosition() {
+            return sprite.getPosition();
+        }
+
+    private:
+        //indice variables
+        int target_idx;
+        int crumb_idx;
+        
+        //float variables
+        float drop_timer;
+        float speed;
+        float orientation;
+        
+        //renderable objects
+        sf::Sprite sprite;
+        sf::RenderWindow* window;    
+        
+        //vector variables
+        sf::Vector2f target;    
+        sf::Vector2f position;
+        sf::Vector2f velocity;
+
+        //point of breadcrumbs
+        std::vector<crumb>* breadcrumbs;
+};
+
 int main() {
     // Create a window with the same pixel depth as the desktop, with 144 frames per second.
     sf::RenderWindow window;
@@ -14,20 +125,26 @@ int main() {
     //Set framerate to 100 (ideally)
     window.setFramerateLimit(100);
 
+    //Set up boid texture
     sf::Texture texture;
-    if (!texture.loadFromFile("Assets/boid.png")) {
-        return -1;
+    if (!texture.loadFromFile("Assets/boid.png"))
+    {
+        // error...
     }
 
-    //Set up main sprite.
-    sf::Sprite main;
-    main.setTexture(texture);
-    main.setScale(.05, .05);
-    main.setOrigin(17 / .05, 17 / .05);
-    main.setPosition(sf::Vector2f(main.getGlobalBounds().width, main.getGlobalBounds().width));
+    //Set up bread crumbs
+    std::vector<crumb> breadcrumbs = std::vector<crumb>();
+    for(int i = 0; i < 10; i++)
+    {
+        crumb c(i);
+        breadcrumbs.push_back(c);
+    }
+    //Set up boid
+    boid b = boid(&window, texture, &breadcrumbs);
 
+    //Make kinematic and steering behaviors
     Kinematic character;
-    character.pos = main.getPosition();
+    character.pos = b.getPosition();
 
     SteeringData steering;
 
@@ -76,11 +193,16 @@ int main() {
 
             //Update character position and orientation.
             character.update(steering, frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-            main.setPosition(character.pos);
+            b.setPosition(character.pos);
 
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
-            window.draw(main);
+            b.move();
+            for(int i = 0; i < breadcrumbs.size(); i++)
+            {
+                breadcrumbs[i].draw(&window);
+            }
+            b.draw();
             window.display();
         }
         
