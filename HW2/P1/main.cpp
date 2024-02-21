@@ -3,13 +3,9 @@
 
 #include <cstdio>
 #include <iostream>
+#include <deque>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
-
-const sf::Vector2f TOP_RIGHT = sf::Vector2f(550, 0);
-const sf::Vector2f BOT_RIGHT = sf::Vector2f(550, 550);
-const sf::Vector2f BOT_LEFT = sf::Vector2f(0, 550);
-const sf::Vector2f TOP_LEFT = sf::Vector2f(0, 0);
 
 //Breadcrumb class
 class crumb : sf::CircleShape
@@ -20,6 +16,7 @@ class crumb : sf::CircleShape
             //set initial position and size breadcrumbs   
             this->id = id;         
             this->setRadius(10.f);
+            this->setOrigin(10.f, 10.f);
             this->setFillColor(sf::Color::Red);
             this->setPosition(-100, -100);
         }
@@ -52,7 +49,7 @@ class boid
         boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<crumb>* crumbs)
         {
             window = w;
-            drop_timer = 30.f;
+            drop_timer = 15.f;
             crumb_idx = 0;
             sprite.setScale(0.05f, 0.05f);
             sprite.setOrigin(sf::Vector2f(17.0/ .05f, 17.0 / .05f));
@@ -96,22 +93,14 @@ class boid
 
     private:
         //indice variables
-        int target_idx;
         int crumb_idx;
         
         //float variables
         float drop_timer;
-        float speed;
-        float orientation;
         
         //renderable objects
         sf::Sprite sprite;
         sf::RenderWindow* window;    
-        
-        //vector variables
-        sf::Vector2f target;    
-        sf::Vector2f position;
-        sf::Vector2f velocity;
 
         //point of breadcrumbs
         std::vector<crumb>* breadcrumbs;
@@ -141,6 +130,11 @@ int main() {
     }
     //Set up boid
     boid b = boid(&window, texture, &breadcrumbs);
+
+    std::deque<sf::CircleShape> clickCircles;
+
+
+
 
     //Make kinematic and steering behaviors
     Kinematic character;
@@ -178,12 +172,23 @@ int main() {
                 }
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
+                        //Handle timing and calculate velocity.
                         oldPos = target.pos;
                         target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
                         lastClick = newClick;
                         newClick = currentTic;
-
                         target.velocity = (target.pos - oldPos) / (frameTime.getRealTicLength() * (newClick - lastClick));
+
+                        //Update mouse click circles.
+                        sf::CircleShape c;
+                        c.setRadius(5.0);
+                        c.setOrigin(5.0, 5.0);
+                        c.setFillColor(sf::Color::Green);
+                        c.setPosition(target.pos);
+                        clickCircles.push_back(c);
+                        if (clickCircles.size() > 5) {
+                            clickCircles.pop_front();
+                        }
                     }
                 }
             }
@@ -201,6 +206,9 @@ int main() {
             for(int i = 0; i < breadcrumbs.size(); i++)
             {
                 breadcrumbs[i].draw(&window);
+            }
+            for (int i = 0; i < clickCircles.size(); i++) {
+                window.draw(clickCircles[i]);
             }
             b.draw();
             window.display();
