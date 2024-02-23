@@ -1,18 +1,6 @@
 #include "SteeringBehavior.h"
 
-#define RDEC 200 //Free parameter. The radius around the target where we start to decelerate
-#define RSAT 10 //Free parameter. The "good enough" range around the target.
-#define TTTV 1 //Time To Target Velocity. Over what period of time do we want the change in velocity to occur.
-#define MAXVEL 100 //Free parameter?
-#define MAXACCEL 1 //Free parameter?
-
-#define ANGULARDEC 1
-#define MAXROT .8 //Free parameter
-#define ANGULARSAT .6
-
-#define WANDERRATE 5.f
-#define WANDEROFFSET 100.f
-#define WANDERRADIUS 5.f
+#define MAXACCEL 100 //Free parameter?
 
 
 
@@ -78,21 +66,25 @@ void RotationMatch::calculateAcceleration(SteeringData *steering, Kinematic char
     steering->angular /= (float)TTTV;
 }
 
+Wander::Wander() {
+}
+
 float Wander::randBinomial() {
-    srand(time(0));
     float first = (float)(rand()) / (float)(RAND_MAX);
     float second = (float)(rand()) / (float)(RAND_MAX);
     return first - second;
 }
 
 void Wander::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
-    //Update wander orientation
-    float wanderOrientation = randBinomial() * WANDERRATE;
-
+    //Get how much we want to turn. If it's 1.25 and randBinomial returns 1, then we will turn 1.25 in the circle.
+    wanderOrientation += randBinomial() * WANDER_RATE;
+    //Set our goal orientation at 1.25 from where we are currently facing.
     goal.orientation = wanderOrientation + character.orientation;
 
-    goal.pos = character.pos + WANDEROFFSET * sf::Vector2f(cos(character.orientation), sin(character.orientation));
-    goal.pos += WANDERRADIUS * sf::Vector2f(cos(goal.orientation), sin(goal.orientation));
+    //Find center of circle
+    goal.pos = character.pos + WANDER_OFFSET * sf::Vector2f(cos(character.orientation), sin(character.orientation));
+    //Find target.
+    goal.pos += WANDER_RADIUS * sf::Vector2f(cos(goal.orientation), sin(goal.orientation));
 
     OrientationMatch align;
     align.calculateAcceleration(steering, character, goal);
@@ -102,6 +94,17 @@ void Wander::calculateAcceleration(SteeringData *steering, Kinematic character, 
 }
 
 void Separation::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+    for (Boid *b : boids) {
+        if (b->kinematic.id == character.id) {
+            break;
+        }
+        sf::Vector2f direction = b->kinematic.pos - character.pos;
+        float distance = findMagnitude(direction);
 
+        if (distance < THRESHOLD) {
+            float strength = fmin(DECAY_COEFFICIENT / (distance * distance), MAXACCEL);
+            steering->linear += strength * normalize(direction);
+        }
+    }
 }
 

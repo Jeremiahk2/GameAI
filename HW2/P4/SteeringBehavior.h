@@ -17,37 +17,55 @@ class SteeringBehavior {
             return rtn;
         }
 
+        static sf::Vector2f normalize(sf::Vector2f vector) {
+            return vector / findMagnitude(vector);
+        }
+
     virtual void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) = 0;
 };
 
 //Class for matching position (X, Y coordinates).
 class PositionMatch : public SteeringBehavior {
+    private:
+        static constexpr float RSAT = 10.f;
+        static constexpr float RDEC = 200.f;
+        static constexpr float MAXVEL = 60.f;
+        static constexpr float TTTV = 1.f;
     public:
-    void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
+        void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching orientation (Direction we are facing).
 class OrientationMatch : public SteeringBehavior {
+    private:
+        static constexpr float ANGULARDEC = 1.f;
+        static constexpr float MAXROT = .8f;
+        static constexpr float ANGULARSAT = .6f;
+        static constexpr float TTTV = 1.f;
     public:
-    static float mapToRange(float theta) {
-        theta = fmod(theta, 2 * M_PI);
-        if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
-            return theta;
+        static float mapToRange(float theta) {
+            theta = fmod(theta, 2 * M_PI);
+            if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
+                return theta;
+            }
+            else if (theta > M_PI) { //if theta is greater than pi
+                return theta - 2 * M_PI;
+            }
+            return theta + 2 * M_PI; //if theta is less than -pi
         }
-        else if (theta > M_PI) { //if theta is greater than pi
-            return theta - 2 * M_PI;
-        }
-        return theta + 2 * M_PI; //if theta is less than -pi
-    }
 
-    void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
+        void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching velocity (position over time).
 class VelocityMatch : public SteeringBehavior {
+    private:
+        static constexpr float TTTV = 3.f;
     public:
     void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching rotation (rotational velocity).
 class RotationMatch : public SteeringBehavior {
+    private:
+        static constexpr float TTTV = 3.f;
     public:
 
     static float mapToRange(float theta) {
@@ -65,8 +83,26 @@ class RotationMatch : public SteeringBehavior {
 };
 
 class Wander : public SteeringBehavior {
+    private:
+        static constexpr float WANDER_RATE = 1.25f;
+        static constexpr float WANDER_OFFSET = 100.f;
+        static constexpr float WANDER_RADIUS = 50.f;
+        float wanderOrientation = 0;
     public:
+
+    static float mapToRange(float theta) {
+            theta = fmod(theta, 2 * M_PI);
+            if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
+                return theta;
+            }
+            else if (theta > M_PI) { //if theta is greater than pi
+                return theta - 2 * M_PI;
+            }
+            return theta + 2 * M_PI; //if theta is less than -pi
+        }
     static float randBinomial();
+
+    Wander();
 
     void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };

@@ -13,6 +13,8 @@
 // "Neighborhood" of a boid can just be a simple radius. Reynolds suggests making it a cone but fuck him
 
 int main() {
+
+    srand(time(0));
     // Create a window with the same pixel depth as the desktop, with 144 frames per second.
     sf::RenderWindow window;
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -35,12 +37,17 @@ int main() {
         breadcrumbs.push_back(c);
     }
     //Set up boid
-    Boid b = Boid(&window, texture, &breadcrumbs);
+    Boid one = Boid(&window, texture, &breadcrumbs);
+    SteeringBehavior::boids.push_back(&one);
+
+    // Boid two = Boid(&window, texture, &breadcrumbs);
+    // SteeringBehavior::boids.push_back(&two);
 
     std::deque<sf::CircleShape> clickCircles;
 
     //Set up steering behaviors.
     Wander wander;
+    Separation separation;
     Kinematic target;
 
 
@@ -48,7 +55,7 @@ int main() {
     Timeline global;
     int tic = 10;
     Timeline frameTime(&global, tic);
-    
+
     //CurrentTic starts higher than lastTic so the program starts immediately.
     int64_t currentTic = 0;
     int64_t lastTic = -1;
@@ -67,19 +74,27 @@ int main() {
             }
 
             //Wander Steering behavior.
-            wander.calculateAcceleration(b.steering, b.kinematic, target);
+            wander.calculateAcceleration(one.steering, one.kinematic, target);
+            // wander.calculateAcceleration(two.steering, two.kinematic, target);
+            // separation.calculateAcceleration(b.steering, b.kinematic, target);
+            // separation.calculateAcceleration(b2.steering, b2.kinematic, target);
 
             //Update character with new steering behavior.
-            b.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
+            one.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
+            // two.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
+
+            
 
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
-            b.move();
+            one.move();
+            // two.move();
             for(int i = 0; i < breadcrumbs.size(); i++)
             {
                 breadcrumbs[i].draw(&window);
             }
-            b.draw();
+            one.draw();
+            // two.draw();
             window.display();
         }
         

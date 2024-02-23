@@ -9,6 +9,8 @@ struct SteeringData {
 };
 
 struct Kinematic {
+    int id;
+
     sf::Vector2f pos = sf::Vector2f(0, 0);
     float orientation = 0;
     sf::Vector2f velocity = sf::Vector2f(0, 0);
@@ -66,6 +68,8 @@ class Boid
         void setRotation(float rotation);
 
     private:
+        static int numBoids;
+
         //indice variables
         int crumb_idx;
         

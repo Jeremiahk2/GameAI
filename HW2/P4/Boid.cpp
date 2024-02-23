@@ -28,6 +28,8 @@ void Crumb::drop(sf::Vector2f position)
     this->setPosition(position);
 }
 
+int Boid::numBoids = 0;
+
 Boid::Boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<Crumb>* crumbs)
 {
     window = w;
@@ -40,6 +42,7 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<Crumb>* crumbs)
     sprite.setScale(0.05f, 0.05f);
     breadcrumbs = crumbs;
     steering = new SteeringData;
+    kinematic.id = numBoids++;
 }
 
 void Boid::update(float deltaTime) {
@@ -48,9 +51,9 @@ void Boid::update(float deltaTime) {
     //Set rotation, then boundary corrections.
     sprite.setRotation(kinematic.orientation * (180.0 / M_PI));
     //Make the X and Y value go from X = -640 to 640, and Y go from -480.f to 480.f
-    sprite.setPosition(sf::Vector2f(fmod(kinematic.pos.x, 640.f), fmod(kinematic.pos.y, 480.f)));
+    sprite.setPosition(sf::Vector2f(fmod(kinematic.pos.x, window->getSize().x), fmod(kinematic.pos.y, window->getSize().y)));
     //Add max value to both X and Y to get rid of negatives, then mod again in case it was positive.
-    sprite.setPosition(sf::Vector2f(fmod(sprite.getPosition().x + 640.f, 640.f), fmod(sprite.getPosition().y + 480.f, 480.f)));
+    sprite.setPosition(sf::Vector2f(fmod(sprite.getPosition().x + window->getSize().x, window->getSize().x), fmod(sprite.getPosition().y + window->getSize().y, window->getSize().y)));
 }
 
 void Boid::draw()
