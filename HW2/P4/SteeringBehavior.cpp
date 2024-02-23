@@ -14,6 +14,10 @@
 #define WANDEROFFSET 100.f
 #define WANDERRADIUS 5.f
 
+
+
+std::vector<Boid *> SteeringBehavior::boids = std::vector<Boid *>();
+
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     sf::Vector2f direction = goal.pos - character.pos;
     float distance = findMagnitude(direction);
@@ -95,5 +99,9 @@ void Wander::calculateAcceleration(SteeringData *steering, Kinematic character, 
 
     PositionMatch arrive;
     arrive.calculateAcceleration(steering, character, goal);
+}
+
+void Separation::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+
 }
 
