@@ -30,7 +30,7 @@ void Crumb::drop(sf::Vector2f position)
 
 int Boid::numBoids = 0;
 
-Boid::Boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<Crumb>* crumbs)
+Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
 {
     window = w;
     drop_timer = 15.f;
@@ -40,9 +40,14 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<Crumb>* crumbs)
     kinematic.pos = sf::Vector2f(200.f, 200.f);          
     sprite.setTexture(tex);
     sprite.setScale(0.05f, 0.05f);
-    breadcrumbs = crumbs;
     steering = new SteeringData;
     kinematic.id = numBoids++;
+
+    for(int i = 0; i < 10; i++)
+    {
+        Crumb c(i);
+        breadcrumbs.push_back(c);
+    }
 }
 
 void Boid::update(float deltaTime) {
@@ -57,12 +62,7 @@ void Boid::update(float deltaTime) {
 }
 
 void Boid::draw()
-{            
-    window->draw(sprite);
-}  
-
-void Boid::move()
-{
+{      
     //basic timer for leaving breadcrumbs
     if (drop_timer > 0)
     {
@@ -71,14 +71,20 @@ void Boid::move()
     else
     {
         drop_timer = 15.f;
-        breadcrumbs->at(crumb_idx).drop(sprite.getPosition());
+        breadcrumbs.at(crumb_idx).drop(sprite.getPosition());
 
         if (crumb_idx < 9)
             crumb_idx++;
         else
             crumb_idx = 0;
     }
-}
+
+    for(int i = 0; i < breadcrumbs.size(); i++)
+    {
+        breadcrumbs.at(i).draw(window);
+    }
+    window->draw(sprite);
+}  
 
 void Boid::setPosition (sf::Vector2f newPos) {
     sprite.setPosition(newPos);

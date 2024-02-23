@@ -29,19 +29,11 @@ int main() {
         // error...
     }
 
-    //Set up bread crumbs
-    std::vector<Crumb> breadcrumbs = std::vector<Crumb>();
-    for(int i = 0; i < 10; i++)
-    {
-        Crumb c(i);
-        breadcrumbs.push_back(c);
-    }
     //Set up boid
-    Boid one = Boid(&window, texture, &breadcrumbs);
-    SteeringBehavior::boids.push_back(&one);
-
-    // Boid two = Boid(&window, texture, &breadcrumbs);
-    // SteeringBehavior::boids.push_back(&two);
+    int numBoids = 2;
+    for (int i = 0; i < numBoids; i++) {
+        SteeringBehavior::boids.push_back(new Boid(&window, texture));
+    }
 
     std::deque<sf::CircleShape> clickCircles;
 
@@ -74,27 +66,16 @@ int main() {
             }
 
             //Wander Steering behavior.
-            wander.calculateAcceleration(one.steering, one.kinematic, target);
-            // wander.calculateAcceleration(two.steering, two.kinematic, target);
-            // separation.calculateAcceleration(b.steering, b.kinematic, target);
-            // separation.calculateAcceleration(b2.steering, b2.kinematic, target);
-
-            //Update character with new steering behavior.
-            one.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-            // two.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-
-            
+            for (Boid *b : SteeringBehavior::boids) {
+                wander.calculateAcceleration(b->steering, b->kinematic, target);
+                b->update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
+            }
 
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
-            one.move();
-            // two.move();
-            for(int i = 0; i < breadcrumbs.size(); i++)
-            {
-                breadcrumbs[i].draw(&window);
+            for (Boid *b : SteeringBehavior::boids) {
+                b->draw();
             }
-            one.draw();
-            // two.draw();
             window.display();
         }
         

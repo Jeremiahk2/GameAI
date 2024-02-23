@@ -5,7 +5,8 @@
 
 struct SteeringData {
     sf::Vector2f linear = sf::Vector2f(0, 0);
-    float angular = 0;
+    float angular = 0.f;
+    float wanderOrientation = 0.f;
 };
 
 struct Kinematic {
@@ -53,13 +54,11 @@ class Boid
 
 
 
-        Boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<Crumb>* crumbs);
+        Boid(sf::RenderWindow* w, sf::Texture& tex);
 
         void update(float deltaTime);
 
         void draw();
-
-        void move();
 
         void setPosition (sf::Vector2f newPos);
 
@@ -81,5 +80,5 @@ class Boid
         sf::RenderWindow* window;    
 
         //point of breadcrumbs
-        std::vector<Crumb>* breadcrumbs;
+        std::vector<Crumb> breadcrumbs;
 };

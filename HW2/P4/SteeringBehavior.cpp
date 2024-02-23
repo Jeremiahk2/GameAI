@@ -77,9 +77,9 @@ float Wander::randBinomial() {
 
 void Wander::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     //Get how much we want to turn. If it's 1.25 and randBinomial returns 1, then we will turn 1.25 in the circle.
-    wanderOrientation += randBinomial() * WANDER_RATE;
+    steering->wanderOrientation += randBinomial() * WANDER_RATE;
     //Set our goal orientation at 1.25 from where we are currently facing.
-    goal.orientation = wanderOrientation + character.orientation;
+    goal.orientation = steering->wanderOrientation + character.orientation;
 
     //Find center of circle
     goal.pos = character.pos + WANDER_OFFSET * sf::Vector2f(cos(character.orientation), sin(character.orientation));
