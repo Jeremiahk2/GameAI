@@ -30,7 +30,7 @@ int main() {
     }
 
     //Set up boid
-    int numBoids = 5;
+    int numBoids = 20;
     for (int i = 0; i < numBoids; i++) {
         SteeringBehavior::boids.push_back(new Boid(&window, texture));
         sf::Vector2f vector = SteeringBehavior::boids.back()->kinematic.pos;
@@ -66,6 +66,11 @@ int main() {
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed) {
                     window.close();
+                }
+                if (event.mouseButton.button == sf::Mouse::Left) {
+                    target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
+                    //Update mouse click circles.
+                    std::cout << "X: " << target.pos.x << " Y: " << target.pos.y << std::endl;
                 }
             }
 

@@ -27,10 +27,10 @@ class SteeringBehavior {
 //Class for matching position (X, Y coordinates).
 class PositionMatch : public SteeringBehavior {
     private:
-        static constexpr float RSAT = 10.f;
-        static constexpr float RDEC = 200.f;
-        static constexpr float MAXVEL = 80.f;
-        static constexpr float TTTV = 1.f;
+        static constexpr float RSAT = 1.f;
+        static constexpr float RDEC = 1.f;
+        static constexpr float MAXVEL = 160.f;
+        static constexpr float TTTV = 3.f;
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
@@ -39,7 +39,7 @@ class OrientationMatch : public SteeringBehavior {
     private:
         static constexpr float ANGULARDEC = 1.f;
         static constexpr float MAXROT = .8f;
-        static constexpr float ANGULARSAT = .6f;
+        static constexpr float ANGULARSAT = .2f;
         static constexpr float TTTV = 1.f;
     public:
         static float mapToRange(float theta) {
@@ -110,9 +110,9 @@ class Wander : public SteeringBehavior {
 class Separation : public SteeringBehavior {
     private:
         //How close the other boids need to be to be affected.
-        static constexpr float THRESHOLD = 50.f;
+        static constexpr float THRESHOLD = 20.f;
 
-        static constexpr float DECAY_COEFFICIENT = 1000.f;
+        static constexpr float DECAY_COEFFICIENT = 2000.f;
 
         static constexpr float MAX_ACCEL = 1000.f;
     public:
@@ -124,13 +124,13 @@ class Separation : public SteeringBehavior {
 class Flocking : public SteeringBehavior {
     private:
         //Weight for separation behavior.
-        static constexpr float SEPARATION_WEIGHT = 3.f;
+        static constexpr float SEPARATION_WEIGHT = 4.f;
         //Weight for velocity matching behavior.
-        static constexpr float ALLIGNMENT_WEIGHT = 2.5f;
+        static constexpr float ALLIGNMENT_WEIGHT = 3.5f;
         //Weight for position matching behavior.
-        static constexpr float COHESION_WEIGHT = 0.f;
+        static constexpr float COHESION_WEIGHT = .1f;
         //Threshold for position matching and allignment behavior.
-        static constexpr float THRESHOLD = 100.f;
+        static constexpr float THRESHOLD = 50.f;
 
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;

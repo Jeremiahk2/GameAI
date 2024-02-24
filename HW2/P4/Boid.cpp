@@ -1,11 +1,11 @@
 #include "Boid.h"
-
+#include <iostream>
 Crumb::Crumb(int id)
 {
     //set initial position and size breadcrumbs   
     this->id = id;         
-    this->setRadius(10.f);
-    this->setOrigin(10.f, 10.f);
+    this->setRadius(1.f);
+    this->setOrigin(this->getGlobalBounds().width / 2.f, this->getGlobalBounds().height / 2.f);
     this->setFillColor(sf::Color::Red);
     this->setPosition(-100, -100);
 }
@@ -35,11 +35,10 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     window = w;
     drop_timer = 15.f;
     crumb_idx = 0;
-    sprite.setScale(0.05f, 0.05f);
-    sprite.setOrigin(sf::Vector2f(17.0/ .05f, 17.0 / .05f));
-    kinematic.pos = sf::Vector2f(200.f, 200.f);
     sprite.setTexture(tex);
-    sprite.setScale(0.05f, 0.05f);
+    sprite.setScale(0.02f, 0.02f);
+    sprite.setOrigin(sf::Vector2f((sprite.getGlobalBounds().width / 2.f) / .02f, (sprite.getGlobalBounds().height / 2.f) / .02f));
+    kinematic.pos = sf::Vector2f(200.f, 200.f);
     steering = new SteeringData;
     kinematic.id = numBoids++;
 
