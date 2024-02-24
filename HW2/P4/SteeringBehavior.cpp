@@ -3,7 +3,28 @@
 std::vector<Boid *> SteeringBehavior::boids = std::vector<Boid *>();
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
-    sf::Vector2f direction = goal.pos - character.pos;
+    // sf::Vector2f direction = goal.pos - character.pos;
+    sf::Vector2f direction;
+    //Get the direction for X directly and by wrapping around
+    float directX = goal.pos.x - character.pos.x; 
+    if (directX == 0.f) {
+        direction.x = 0.f;
+    }
+    else {
+        float indirectX = directX - (directX/ fabs(directX)) * 640.f;
+        direction.x = (fabs(directX) < fabs(indirectX)) ? directX : indirectX;
+    }
+    //Get the direction for Y directly and by wrapping around.
+    float directY = goal.pos.y - character.pos.y; 
+    if (directY == 0.f) {
+        direction.y = 0.f;
+    }
+    else {
+        float indirectY = directY - (directY/ fabs(directY)) * 640.f;
+        //Use the smaller (absolute) one.
+        direction.y = (fabs(directY) < fabs(indirectY)) ? directY : indirectY;
+    }
+
     float distance = findMagnitude(direction);
     float goalSpeed;
     if (distance < RSAT) {
@@ -92,12 +113,32 @@ void Wander::calculateAcceleration(SteeringData *steering, Kinematic character, 
 void Separation::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     for (Boid *b : boids) {
         if (b->kinematic.id == character.id) {
-            break;
+            continue;
         }
-        sf::Vector2f direction = b->kinematic.pos - character.pos;
+        sf::Vector2f direction;
+        //Get the direction for X directly and by wrapping around
+        float directX = character.pos.x - b->kinematic.pos.x; 
+        if (directX == 0.f) {
+            direction.x = 0.f;
+        }
+        else {
+            float indirectX = directX - (directX/ fabs(directX)) * 640.f;
+            direction.x = (fabs(directX) < fabs(indirectX)) ? directX : indirectX;
+        }
+        //Get the direction for Y directly and by wrapping around.
+        float directY = character.pos.y - b->kinematic.pos.y; 
+        if (directY == 0.f) {
+            direction.y = 0.f;
+        }
+        else {
+            float indirectY = directY - (directY/ fabs(directY)) * 640.f;
+            //Use the smaller (absolute) one.
+            direction.y = (fabs(directY) < fabs(indirectY)) ? directY : indirectY;
+        }
+
         float distance = findMagnitude(direction);
 
-        if (distance < THRESHOLD) {
+        if (distance < THRESHOLD && distance != 0) {
             float strength = fmin(DECAY_COEFFICIENT / (distance * distance), MAX_ACCEL);
             steering->linear += strength * normalize(direction);
         }
@@ -118,39 +159,60 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
     sf::Vector2f centerOfMass = sf::Vector2f(0.f, 0.f);
     int numNeighbors = 0;
     for (Boid *b : boids) {
-        sf::Vector2f direction = b->kinematic.pos - character.pos;
-        float distance = findMagnitude(direction);
-        // std::cout << distance << std::endl;
+        sf::Vector2f direction;
+        //Get the direction for X directly and by wrapping around
+        float directX = b->kinematic.pos.x - character.pos.x; 
+        if (directX == 0.f) {
+            direction.x = 0.f;
+        }
+        else {
+            float indirectX = directX - (directX/ fabs(directX)) * 640.f;
+            direction.x = (fabs(directX) < fabs(indirectX)) ? directX : indirectX;
+        }
+        //Get the direction for Y directly and by wrapping around.
+        float directY = b->kinematic.pos.y - character.pos.y; 
+        if (directY == 0.f) {
+            direction.y = 0.f;
+        }
+        else {
+            float indirectY = directY - (directY/ fabs(directY)) * 640.f;
+            //Use the smaller (absolute) one.
+            direction.y = (fabs(directY) < fabs(indirectY)) ? directY : indirectY;
+        }
 
+        float distance = findMagnitude(direction);
         //NumNeighbors should always end up at one because we are included in the list of boids.
         if (distance < THRESHOLD) {
             centerOfMass += b->kinematic.pos;
             averageVelocity += b->kinematic.velocity;
             numNeighbors++;
-            // std::cout << "Center of mass: " << b->kinematic.pos.x << " Average Velocity: " << b->kinematic.pos.y << std::endl;
         }
     }
-    // std::cout << "NumNeighbors: " << numNeighbors << std::endl;
-    // std::cout << "Center of mass: " << centerOfMass.x << " Average Velocity: " << averageVelocity.x << std::endl;
     centerOfMass /= (float)numNeighbors;
     averageVelocity /= (float)numNeighbors;
-    // std::cout << "Center of mass: " << centerOfMass.x << " Average Velocity: " << averageVelocity.x << std::endl;
 
     goal.pos = centerOfMass;
     goal.velocity = averageVelocity;
 
     //Do weighted blending for linear acceleration behaviors.
-    separator.calculateAcceleration(steering, character, goal); //Separation
-    SteeringData separationData = *steering;
-    aligner.calculateAcceleration(steering, character, goal); //Velocity matching C.O.M
-    SteeringData alignmentData = *steering;
-    cohesion.calculateAcceleration(steering, character, goal); //Position matching C.O.M
-    SteeringData cohesionData = *steering;
+    SteeringData separationData;
+    separator.calculateAcceleration(&separationData, character, goal); //Separation
 
+    SteeringData alignmentData;
+    aligner.calculateAcceleration(&alignmentData, character, goal); //Velocity matching C.O.M
 
+    SteeringData cohesionData;
+    if (numNeighbors != 1) {
+        cohesion.calculateAcceleration(&cohesionData, character, goal); //Position matching C.O.M
+    }
+    std::cout << "Boid " << character.id << " Position: " << character.pos.x << std::endl;
+    std::cout << "Boid " << character.id << " Separation: " << separationData.linear.x << std::endl;
+    std::cout << "Boid " << character.id << " Alignment: " << alignmentData.linear.x << std::endl;
+    std::cout << "Boid " << character.id << " Cohesion: " << cohesionData.linear.x << std::endl;
+    
     //Find total linear value.
-    steering->linear = SEPARATION_WEIGHT * separationData.linear 
-        + ALLIGNMENT_WEIGHT * alignmentData.linear + COHESION_WEIGHT * separationData.linear;
+    steering->linear = SEPARATION_WEIGHT * separationData.linear
+        + ALLIGNMENT_WEIGHT * alignmentData.linear + COHESION_WEIGHT * cohesionData.linear;
 
     float theta;
     if ((character.velocity).x != 0) {

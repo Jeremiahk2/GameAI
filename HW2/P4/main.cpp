@@ -30,11 +30,12 @@ int main() {
     }
 
     //Set up boid
-    int numBoids = 2;
+    int numBoids = 5;
     for (int i = 0; i < numBoids; i++) {
         SteeringBehavior::boids.push_back(new Boid(&window, texture));
         sf::Vector2f vector = SteeringBehavior::boids.back()->kinematic.pos;
-        vector.x += (float)i - 1.f;
+        vector.x += Wander::randBinomial();
+        vector.y += Wander::randBinomial();
         SteeringBehavior::boids.back()->kinematic.pos = vector;
     }
     std::deque<sf::CircleShape> clickCircles;
@@ -68,14 +69,14 @@ int main() {
                 }
             }
 
-            //Wander Steering behavior.
+            //Calculate acceleration for all boids.
             for (Boid *b : SteeringBehavior::boids) {
                 flocking.calculateAcceleration(b->steering, b->kinematic, target);
-                // std::cout << "X: " << b->steering->linear.x << " Y: " << b->steering->linear.y << std::endl;
-
+            }
+            //Update all boids
+            for (Boid *b : SteeringBehavior::boids) {
                 b->update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
             }
-
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
             for (Boid *b : SteeringBehavior::boids) {

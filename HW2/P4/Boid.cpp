@@ -53,12 +53,16 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
 void Boid::update(float deltaTime) {
     kinematic.update(*steering, deltaTime);
 
+    
+
     //Set rotation, then boundary corrections.
     sprite.setRotation(kinematic.orientation * (180.0 / M_PI));
     //Make the X and Y value go from X = -640 to 640, and Y go from -480.f to 480.f
     sprite.setPosition(sf::Vector2f(fmod(kinematic.pos.x, window->getSize().x), fmod(kinematic.pos.y, window->getSize().y)));
     //Add max value to both X and Y to get rid of negatives, then mod again in case it was positive.
     sprite.setPosition(sf::Vector2f(fmod(sprite.getPosition().x + window->getSize().x, window->getSize().x), fmod(sprite.getPosition().y + window->getSize().y, window->getSize().y)));
+
+    kinematic.pos = sprite.getPosition();
 }
 
 void Boid::draw()
