@@ -37,7 +37,7 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     crumb_idx = 0;
     sprite.setScale(0.05f, 0.05f);
     sprite.setOrigin(sf::Vector2f(17.0/ .05f, 17.0 / .05f));
-    kinematic.pos = sf::Vector2f(200.f, 200.f);          
+    kinematic.pos = sf::Vector2f(200.f, 200.f);
     sprite.setTexture(tex);
     sprite.setScale(0.05f, 0.05f);
     steering = new SteeringData;

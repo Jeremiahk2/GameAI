@@ -1,9 +1,5 @@
 #include "SteeringBehavior.h"
 
-#define MAXACCEL 100 //Free parameter?
-
-
-
 std::vector<Boid *> SteeringBehavior::boids = std::vector<Boid *>();
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
@@ -102,9 +98,93 @@ void Separation::calculateAcceleration(SteeringData *steering, Kinematic charact
         float distance = findMagnitude(direction);
 
         if (distance < THRESHOLD) {
-            float strength = fmin(DECAY_COEFFICIENT / (distance * distance), MAXACCEL);
+            float strength = fmin(DECAY_COEFFICIENT / (distance * distance), MAX_ACCEL);
             steering->linear += strength * normalize(direction);
         }
     }
 }
+
+void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+
+    //Begin weighted blending.
+
+    PositionMatch cohesion;
+    VelocityMatch aligner;
+    Separation separator;
+    OrientationMatch orienter;
+
+    //Calculate center of mass of nearby neighbors and average velocity.
+    sf::Vector2f averageVelocity = sf::Vector2f(0.f, 0.f);
+    sf::Vector2f centerOfMass = sf::Vector2f(0.f, 0.f);
+    int numNeighbors = 0;
+    for (Boid *b : boids) {
+        sf::Vector2f direction = b->kinematic.pos - character.pos;
+        float distance = findMagnitude(direction);
+        // std::cout << distance << std::endl;
+
+        //NumNeighbors should always end up at one because we are included in the list of boids.
+        if (distance < THRESHOLD) {
+            centerOfMass += b->kinematic.pos;
+            averageVelocity += b->kinematic.velocity;
+            numNeighbors++;
+            // std::cout << "Center of mass: " << b->kinematic.pos.x << " Average Velocity: " << b->kinematic.pos.y << std::endl;
+        }
+    }
+    // std::cout << "NumNeighbors: " << numNeighbors << std::endl;
+    // std::cout << "Center of mass: " << centerOfMass.x << " Average Velocity: " << averageVelocity.x << std::endl;
+    centerOfMass /= (float)numNeighbors;
+    averageVelocity /= (float)numNeighbors;
+    // std::cout << "Center of mass: " << centerOfMass.x << " Average Velocity: " << averageVelocity.x << std::endl;
+
+    goal.pos = centerOfMass;
+    goal.velocity = averageVelocity;
+
+    //Do weighted blending for linear acceleration behaviors.
+    separator.calculateAcceleration(steering, character, goal); //Separation
+    SteeringData separationData = *steering;
+    aligner.calculateAcceleration(steering, character, goal); //Velocity matching C.O.M
+    SteeringData alignmentData = *steering;
+    cohesion.calculateAcceleration(steering, character, goal); //Position matching C.O.M
+    SteeringData cohesionData = *steering;
+
+
+    //Find total linear value.
+    steering->linear = SEPARATION_WEIGHT * separationData.linear 
+        + ALLIGNMENT_WEIGHT * alignmentData.linear + COHESION_WEIGHT * separationData.linear;
+
+    float theta;
+    if ((character.velocity).x != 0) {
+        theta = atan2((character.velocity).y, (character.velocity).x);
+    }
+    else {
+        theta = atan2((character.velocity).y, 0);
+    }
+    goal.orientation = theta;
+
+    //Find total angular value.
+    orienter.calculateAcceleration(steering, character, goal);
+    
+    //Questions:
+    //Should I count in the center of mass/average velocity calculation? 
+    //Should I allign in the direction of steering->linear? 
+    //Should I wander?
+
+    //Answers:
+    //Doesn't matter much, but probably yes. He did mention some situation where you might not though.
+    //Allign in direction of CURRENT velocity, not acceleration
+    //No need to wander.
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
