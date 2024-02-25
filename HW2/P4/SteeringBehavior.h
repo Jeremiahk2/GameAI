@@ -27,10 +27,10 @@ class SteeringBehavior {
 //Class for matching position (X, Y coordinates).
 class PositionMatch : public SteeringBehavior {
     private:
-        static constexpr float RSAT = 1.f;
-        static constexpr float RDEC = 1.f;
+        static constexpr float RSAT = 0.f;
+        static constexpr float RDEC = 0.f;
         static constexpr float MAXVEL = 160.f;
-        static constexpr float TTTV = 3.f;
+        static constexpr float TTTV = 1.f;
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
@@ -130,7 +130,7 @@ class Flocking : public SteeringBehavior {
         //Weight for position matching behavior.
         static constexpr float COHESION_WEIGHT = .1f;
         //Threshold for position matching and allignment behavior.
-        static constexpr float THRESHOLD = 50.f;
+        static constexpr float THRESHOLD = 35.f;
 
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;

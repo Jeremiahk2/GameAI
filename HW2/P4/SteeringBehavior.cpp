@@ -138,7 +138,7 @@ void Separation::calculateAcceleration(SteeringData *steering, Kinematic charact
 
         float distance = findMagnitude(direction);
 
-        if (distance < THRESHOLD && distance != 0) {
+        if (distance <= THRESHOLD && distance != 0) {
             float strength = fmin(DECAY_COEFFICIENT / (distance * distance), MAX_ACCEL);
             steering->linear += strength * normalize(direction);
         }
