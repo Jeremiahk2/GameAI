@@ -49,7 +49,7 @@ class boid
         boid(sf::RenderWindow* w, sf::Texture& tex, std::vector<crumb>* crumbs)
         {
             window = w;
-            drop_timer = 15.f;
+            drop_timer = 5.f;
             crumb_idx = 0;
             sprite.setScale(0.05f, 0.05f);
             sprite.setOrigin(sf::Vector2f(17.0/ .05f, 17.0 / .05f));
@@ -73,7 +73,7 @@ class boid
             }
             else
             {
-                drop_timer = 100.f;
+                drop_timer = 5.f;
                 breadcrumbs->at(crumb_idx).drop(sprite.getPosition());
 
                 if (crumb_idx < 9)
@@ -186,7 +186,7 @@ int main() {
                         c.setFillColor(sf::Color::Green);
                         c.setPosition(target.pos);
                         clickCircles.push_back(c);
-                        if (clickCircles.size() > 5) {
+                        if (clickCircles.size() > 30) {
                             clickCircles.pop_front();
                         }
                     }
