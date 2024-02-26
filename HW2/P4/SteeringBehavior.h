@@ -111,6 +111,8 @@ class Flocking : public SteeringBehavior {
         //Threshold for position matching and allignment behavior.
         static constexpr float THRESHOLD = 30.f;
 
+        static constexpr float ANG_THRESHOLD = (3 * M_PI) / 4;
+
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };

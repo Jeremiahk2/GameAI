@@ -29,7 +29,7 @@ int main() {
         // error...
     }
 
-    //Set up boid
+    //Set up boids
     int numBoids = 40;
     for (int i = 0; i < numBoids; i++) {
         SteeringBehavior::boids.push_back(new Boid(&window, texture));
