@@ -27,6 +27,8 @@ UBUNTU_COMPILER=/usr/bin/g++
 
 all: main
 
+remake: clean main
+
 
 
 uname_s := $(shell uname -s)
