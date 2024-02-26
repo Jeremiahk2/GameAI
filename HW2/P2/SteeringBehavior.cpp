@@ -6,9 +6,9 @@
 #define MAXVEL 60 //Free parameter?
 #define MAXACCEL 1 //Free parameter?
 
-#define ANGULARDEC 1
-#define MAXROT .8 //Free parameter
-#define ANGULARSAT .6
+#define ANGULARDEC 2.0
+#define MAXROT 1.2 //Free parameter
+#define ANGULARSAT .2
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
     sf::Vector2f direction = goal.pos - character.pos;
