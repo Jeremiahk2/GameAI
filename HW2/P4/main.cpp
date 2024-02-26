@@ -30,7 +30,7 @@ int main() {
     }
 
     //Set up boid
-    int numBoids = 20;
+    int numBoids = 40;
     for (int i = 0; i < numBoids; i++) {
         SteeringBehavior::boids.push_back(new Boid(&window, texture));
         sf::Vector2f vector = SteeringBehavior::boids.back()->kinematic.pos;

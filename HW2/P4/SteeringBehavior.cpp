@@ -210,13 +210,12 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
         if ((distance < THRESHOLD)) {
             averageVelocity += b->kinematic.velocity;
             numVelocity++;
-            if ((mapToRange(angle) - mapToRange(theta)) < (M_PI / 2.f)) {
+            if ((mapToRange(angle) - mapToRange(theta)) < (3.f * M_PI / 4.f)) {
                 centerOfMass += character.pos + direction;
                 numMass++;
             }
         }
     }
-    std::cout << "Boid: " << character.id << " Num Neighbors: " << numMass << std::endl;
     centerOfMass /= (float)numMass;
     averageVelocity /= (float)numVelocity;
 

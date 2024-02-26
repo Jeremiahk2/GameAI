@@ -89,11 +89,11 @@ class Wander : public SteeringBehavior {
 class Separation : public SteeringBehavior {
     private:
         //How close the other boids need to be to be affected.
-        static constexpr float THRESHOLD = 20.f;
+        static constexpr float THRESHOLD = 25.f;
 
         static constexpr float DECAY_COEFFICIENT = 2000.f;
 
-        static constexpr float MAX_ACCEL = 1000.f;
+        static constexpr float MAX_ACCEL = 100.f;
     public:
 
 
@@ -103,13 +103,13 @@ class Separation : public SteeringBehavior {
 class Flocking : public SteeringBehavior {
     private:
         //Weight for separation behavior.
-        static constexpr float SEPARATION_WEIGHT = 4.f;
+        static constexpr float SEPARATION_WEIGHT = 4.0f;
         //Weight for velocity matching behavior.
         static constexpr float ALLIGNMENT_WEIGHT = 3.5f;
         //Weight for position matching behavior.
-        static constexpr float COHESION_WEIGHT = .1f;
+        static constexpr float COHESION_WEIGHT = .4f;
         //Threshold for position matching and allignment behavior.
-        static constexpr float THRESHOLD = 35.f;
+        static constexpr float THRESHOLD = 30.f;
 
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
