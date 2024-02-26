@@ -153,11 +153,21 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
     VelocityMatch aligner;
     Separation separator;
     OrientationMatch orienter;
+    float theta;
+    if ((character.velocity).x != 0) {
+        theta = atan2((character.velocity).y, (character.velocity).x);
+    }
+    else {
+        theta = atan2((character.velocity).y, 0);
+    }
+    goal.orientation = theta;
+
 
     //Calculate center of mass of nearby neighbors and average velocity.
     sf::Vector2f averageVelocity = sf::Vector2f(0.f, 0.f);
     sf::Vector2f centerOfMass = sf::Vector2f(0.f, 0.f);
-    int numNeighbors = 0;
+    int numMass = 0;
+    int numVelocity = 0;
     for (Boid *b : boids) {
         bool invertedX = false;
         bool invertedY = false;
@@ -185,15 +195,30 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
         }
 
         float distance = findMagnitude(direction);
-        //NumNeighbors should always end up at one because we are included in the list of boids.
-        if (distance < THRESHOLD) {
-            centerOfMass += character.pos + direction;
+
+        float angle;
+        if (distance == 0.f) {
+            angle = theta;
+        }
+        else if ((direction).x != 0.f) { 
+            angle = atan2((direction).y, (direction).x);
+        }
+        else {
+            angle = atan2((direction).y, 0.f);
+        }
+
+        if ((distance < THRESHOLD)) {
             averageVelocity += b->kinematic.velocity;
-            numNeighbors++;
+            numVelocity++;
+            if ((mapToRange(angle) - mapToRange(theta)) < (M_PI / 2.f)) {
+                centerOfMass += character.pos + direction;
+                numMass++;
+            }
         }
     }
-    centerOfMass /= (float)numNeighbors;
-    averageVelocity /= (float)numNeighbors;
+    std::cout << "Boid: " << character.id << " Num Neighbors: " << numMass << std::endl;
+    centerOfMass /= (float)numMass;
+    averageVelocity /= (float)numVelocity;
 
     goal.pos = centerOfMass;
     goal.velocity = averageVelocity;
@@ -203,10 +228,12 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
     separator.calculateAcceleration(&separationData, character, goal); //Separation
 
     SteeringData alignmentData;
-    aligner.calculateAcceleration(&alignmentData, character, goal); //Velocity matching C.O.M
+    if (numVelocity > 1) {
+        aligner.calculateAcceleration(&alignmentData, character, goal); //Velocity matching C.O.M
+    }
 
     SteeringData cohesionData;
-    if (numNeighbors != 1) {
+    if (numMass > 1) {
         cohesion.calculateAcceleration(&cohesionData, character, goal); //Position matching C.O.M
     }
 
@@ -221,15 +248,6 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
     //Find total linear value.
     steering->linear = SEPARATION_WEIGHT * separationData.linear
         + ALLIGNMENT_WEIGHT * alignmentData.linear + COHESION_WEIGHT * cohesionData.linear;
-
-    float theta;
-    if ((character.velocity).x != 0) {
-        theta = atan2((character.velocity).y, (character.velocity).x);
-    }
-    else {
-        theta = atan2((character.velocity).y, 0);
-    }
-    goal.orientation = theta;
 
     //Find total angular value.
     orienter.calculateAcceleration(steering, character, goal);

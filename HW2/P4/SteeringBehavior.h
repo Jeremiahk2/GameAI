@@ -17,6 +17,17 @@ class SteeringBehavior {
             return rtn;
         }
 
+        static float mapToRange(float theta) {
+            theta = fmod(theta, 2 * M_PI);
+            if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
+                return theta;
+            }
+            else if (theta > M_PI) { //if theta is greater than pi
+                return theta - 2 * M_PI;
+            }
+            return theta + 2 * M_PI; //if theta is less than -pi
+        }
+
         static sf::Vector2f normalize(sf::Vector2f vector) {
             return vector / findMagnitude(vector);
         }
@@ -42,16 +53,6 @@ class OrientationMatch : public SteeringBehavior {
         static constexpr float ANGULARSAT = .2f;
         static constexpr float TTTV = 1.f;
     public:
-        static float mapToRange(float theta) {
-            theta = fmod(theta, 2 * M_PI);
-            if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
-                return theta;
-            }
-            else if (theta > M_PI) { //if theta is greater than pi
-                return theta - 2 * M_PI;
-            }
-            return theta + 2 * M_PI; //if theta is less than -pi
-        }
 
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
@@ -68,17 +69,6 @@ class RotationMatch : public SteeringBehavior {
         static constexpr float TTTV = 3.f;
     public:
 
-    static float mapToRange(float theta) {
-        theta = fmod(theta, 2 * M_PI);
-        if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
-            return theta;
-        }
-        else if (theta > M_PI) { //if theta is greater than pi
-            return theta - 2 * M_PI;
-        }
-        return theta + 2 * M_PI; //if theta is less than -pi
-    }
-
     void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 
@@ -89,17 +79,6 @@ class Wander : public SteeringBehavior {
         static constexpr float WANDER_RADIUS = 50.f;
         float wanderOrientation = 0;
     public:
-
-    static float mapToRange(float theta) {
-            theta = fmod(theta, 2 * M_PI);
-            if (fabs(theta) <= M_PI) { //If theta is from -pi to pi
-                return theta;
-            }
-            else if (theta > M_PI) { //if theta is greater than pi
-                return theta - 2 * M_PI;
-            }
-            return theta + 2 * M_PI; //if theta is less than -pi
-        }
     static float randBinomial();
 
     Wander();
