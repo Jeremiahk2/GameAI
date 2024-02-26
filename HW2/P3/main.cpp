@@ -10,7 +10,7 @@
 //Notes: Center of mass = X1 + X2 + X3... / M1 + M2 + M3...
 //In our case that means that the X coordinate for the center of mass is the sum of all the X coordinates divided by the number of sprites. The average.
 //Same with the Y coordinate.
-// "Neighborhood" of a boid can just be a simple radius. Reynolds suggests making it a cone but fuck him
+// "Neighborhood" of a boid can just be a simple radius. Reynolds suggests making it a cone but not doing that.
 
 int main() {
 
