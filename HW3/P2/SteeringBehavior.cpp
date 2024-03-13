@@ -248,16 +248,3 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
     orienter.calculateAcceleration(steering, character, goal);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
