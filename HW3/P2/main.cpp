@@ -26,31 +26,36 @@ int main() {
         std::string valueOne;
         std::string valueTwo;
         std::string weight;
-        Edge::Vertex start;
-        Edge::Vertex end;
+        std::shared_ptr<Edge::Vertex> start(new Edge::Vertex);
+        std::shared_ptr<Edge::Vertex> end(new Edge::Vertex);
         //Get input and put it into our vertices.
         getline(data, valueOne, ',');
         getline(data, valueTwo, ',');
-        start.position = sf::Vector2f(stoi(valueOne), stoi(valueTwo));
+        start->position = sf::Vector2f(stoi(valueOne), stoi(valueTwo));
         getline(data, valueOne, ',');
         getline(data, valueTwo, ',');
-        end.position = sf::Vector2f(stoi(valueOne), stoi(valueTwo));
+        end->position = sf::Vector2f(stoi(valueOne), stoi(valueTwo));
         getline(data, weight, ',');
         //Create edge.
-        Edge edge;
-        edge.start = start;
-        edge.end = end;
-        edge.weight = stof(weight);
+        std::shared_ptr<Edge> edge(new Edge);
+        edge->start = start;
+        edge->end = end;
+        edge->weight = stof(weight);
         //Add edge to graph
         graph.addEdge(edge);
         infile >> lineString;
     }
 
     for (int i = 0; i < graph.vertices.size(); i++) {
-        for (int j = 0; j < graph.vertices[i].outgoingEdges.size(); j++) {
-            std::cout << graph.vertices[i].outgoingEdges[j].toString() << std::endl;
+        // std::cout << graph.vertices[i]->outgoingEdges.size() << std::endl;
+        for (int j = 0; j < graph.vertices[i]->outgoingEdges.size(); j++) {
+            std::cout << graph.vertices[i]->outgoingEdges[j]->toString() << std::endl;
         }
         std::cout << std::endl;
+    }
+
+    for (int i = 0; i < graph.edges.size(); i++) {
+        std::cout << graph.edges[i]->toString() << std::endl;
     }
 
     return EXIT_SUCCESS;

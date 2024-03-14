@@ -5,7 +5,7 @@ src := $(call rwildcard,./,*.cpp)
 
 obj = $(patsubst %.cpp,%.o,$(src))
 
-LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -pthread
+LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system -pthread -g
 
 INTELMAC_INCLUDEDIR=/usr/local/include			# Intel mac
 APPLESILICON_INCLUDEDIR=/opt/homebrew/include	# Apple Silicon
