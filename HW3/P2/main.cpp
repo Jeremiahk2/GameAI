@@ -45,18 +45,24 @@ int main() {
         graph.addEdge(edge);
         infile >> lineString;
     }
+    Pathfinding finder;
+    std::deque<std::shared_ptr<Edge::Vertex>> result = finder.calculateDijkstra(graph, graph.vertices[0], graph.vertices[1]);
 
-    for (int i = 0; i < graph.vertices.size(); i++) {
-        // std::cout << graph.vertices[i]->outgoingEdges.size() << std::endl;
-        for (int j = 0; j < graph.vertices[i]->outgoingEdges.size(); j++) {
-            std::cout << graph.vertices[i]->outgoingEdges[j]->toString() << std::endl;
-        }
-        std::cout << std::endl;
+    for (int i = 0; i < result.size(); i++) {
+        std::cout << result[i]->toString() << std::endl;
     }
 
-    for (int i = 0; i < graph.edges.size(); i++) {
-        std::cout << graph.edges[i]->toString() << std::endl;
-    }
+    // for (int i = 0; i < graph.vertices.size(); i++) {
+    //     // std::cout << graph.vertices[i]->outgoingEdges.size() << std::endl;
+    //     for (int j = 0; j < graph.vertices[i]->outgoingEdges.size(); j++) {
+    //         std::cout << graph.vertices[i]->outgoingEdges[j]->toString() << std::endl;
+    //     }
+    //     std::cout << std::endl;
+    // }
+
+    // for (int i = 0; i < graph.edges.size(); i++) {
+    //     std::cout << graph.edges[i]->toString() << std::endl;
+    // }
 
     return EXIT_SUCCESS;
 }

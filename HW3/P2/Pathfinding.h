@@ -3,6 +3,9 @@
 #include <list>
 #include <iostream>
 #include <memory>
+#include <deque>
+#include <limits>
+#include <cfloat>
 
 
 class Edge {
@@ -17,6 +20,8 @@ class Edge {
         Vertex();
 
         bool equals(Vertex v);
+
+        std::string toString();
 
     };
     std::shared_ptr<Edge::Vertex> start;
@@ -42,6 +47,19 @@ class Graph {
 
 
 class Pathfinding {
+public:
+    std::deque<float> distances;
+    std::deque<std::shared_ptr<Edge::Vertex>> prev;
+    std::deque<std::shared_ptr<Edge::Vertex>> unvisited;
 
-    void calculateDijkstra(Graph graph, Edge::Vertex source, Edge::Vertex goal);
+    int findIndex(Graph graph, std::shared_ptr<Edge> edge);
+
+    int findIndex(Graph graph, std::shared_ptr<Edge::Vertex> vertex);
+
+    void eraseEdge(Graph graph, std::shared_ptr<Edge> edge);
+    void eraseVertex(Graph graph, std::shared_ptr<Edge::Vertex> vertex);
+
+    bool contains(std::deque<std::shared_ptr<Edge::Vertex>> vertices, std::shared_ptr<Edge::Vertex> vertex);
+
+    std::deque<std::shared_ptr<Edge::Vertex>> calculateDijkstra(Graph graph, std::shared_ptr<Edge::Vertex>source, std::shared_ptr<Edge::Vertex>goal);
 };

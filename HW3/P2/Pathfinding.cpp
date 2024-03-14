@@ -49,22 +49,97 @@ std::string Edge::toString() {
     return rtnString;
 }
 
-void Pathfinding::calculateDijkstra(Graph graph, Edge::Vertex source, Edge::Vertex goal) {
-    std::deque<float> distances;
-    std::deque<Edge::Vertex> prev;
-    std::deque<Edge::Vertex> unvisited;
+std::string Edge::Vertex::toString() {
+    std::string rtnString;
+    rtnString += std::to_string((int)position.x) + "," + std::to_string((int)position.y);
+    return rtnString;
+}
+
+bool Pathfinding::contains(std::deque<std::shared_ptr<Edge::Vertex>> vertices, std::shared_ptr<Edge::Vertex> vertex) {
+    for (int i = 0; i < vertices.size(); i++) {
+        if (vertices[i]->equals(*vertex)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int Pathfinding::findIndex(Graph graph, std::shared_ptr<Edge> edge) {
+    for (int i = 0; i < graph.edges.size(); i++) {
+        if (graph.edges[i]->equals(*edge)) {
+            return i;
+        }
+    }
+    return -1;
+}
+int Pathfinding::findIndex(Graph graph, std::shared_ptr<Edge::Vertex> vertex) {
     for (int i = 0; i < graph.vertices.size(); i++) {
-        if (source.equals(graph.vertices[i])) {
-            distances.push_back(0.f);
+        if (graph.vertices[i]->equals(*vertex)) {
+            return i;
         }
-        else {
-            distances.push_back(-1.f);
+    }
+    return -1;
+}
+
+void Pathfinding::eraseVertex(Graph graph, std::shared_ptr<Edge::Vertex> vertex) {
+    for (int i = 0; i < unvisited.size(); i++) {
+        if (unvisited[i]->equals(*vertex)) {
+            unvisited.erase(unvisited.begin() + i);
+            return;
         }
-        prev.push_back(Edge::Vertex(sf::Vector2f(-1.f, -1.f)));
+    }
+}
+
+std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateDijkstra(Graph graph, std::shared_ptr<Edge::Vertex>source, std::shared_ptr<Edge::Vertex>goal ) {
+    std::deque<std::shared_ptr<Edge::Vertex>> s;
+    //Initialize data structures to infinity/undefined/initial amount.
+    for (int i = 0; i < graph.vertices.size(); i++) {
+        distances.push_back(FLT_MAX);
+        prev.push_back(NULL);
         unvisited.push_back(graph.vertices[i]);
     }
+    //The distance to the source point is zero.
+    distances[findIndex(graph, source)] = 0.f;
 
     while (!unvisited.empty()) {
-
+        //The current vertex.
+        std::shared_ptr<Edge::Vertex> u;
+        float min = FLT_MAX;
+        //Loop through the distances array and find the vertex with the smallest distance that is unvisited. This is our current vertex. First one should be source.
+        for (int i = 0; i < distances.size(); i++) {
+            if (distances[i] <= min && contains(unvisited, graph.vertices[i])) {
+                min = distances[i];
+                u = graph.vertices[i];
+            }
+        }
+        //If we've reached the goal.
+        if (u->equals(*goal)) {
+            //If the goal equals the source, or if prev for the vertex is not empty.
+            if (prev[findIndex(graph, u)] != NULL || u->equals(*source)) {
+                //Go back through the prev array to find our path, add it to the sequence.
+                while (u != NULL) {
+                    s.push_front(u);
+                    u = prev[findIndex(graph, u)];
+                }
+            }
+            //Return the sequence regardless.
+            return s;
+        }
+        //Erase the vertex from the unvisited list.
+        eraseVertex(graph, u);
+        //Loop through the current vertex's outgoing edges.
+        for (int i = 0; i < u->outgoingEdges.size(); i++) {
+            //Current opposite vertex (through and edge)
+            std::shared_ptr<Edge::Vertex> v = u->outgoingEdges[i]->end;
+            // Get the accumulated distance to this vertex, plus the new edge weight to the neighboring vertex.
+            float alt = distances[findIndex(graph, u)] + u->outgoingEdges[i]->weight;
+            //If it's shorter than what is written down, replace it and update prev as well.
+            if (alt < distances[findIndex(graph, v)]) {
+                distances[findIndex(graph, v)] = alt;
+                prev[findIndex(graph, v)] = u;
+            }
+        }
     }
+    return s;
+
 }
