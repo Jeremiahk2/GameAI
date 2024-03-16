@@ -78,7 +78,7 @@ int main() {
         getline(data, weight, ',');
         //Create edge.
         std::shared_ptr<Edge> edge(new Edge);
-        edge->start = graph.vertices[stoi(valueTwo)];
+        edge->start = graph.vertices[stoi(valueOne)];
         edge->end = graph.vertices[stoi(valueTwo)];
         edge->weight = stof(weight);
         //Add edge to graph
@@ -87,16 +87,12 @@ int main() {
         count++;
     }
 
+    Pathfinding finder;
+    std::deque<std::shared_ptr<Edge::Vertex>> result = finder.calculateDijkstra(graph, graph.vertices[0], graph.vertices[20]);
 
-    std::cout << graph.vertices.size() << std::endl;
-    std::cout << graph.edges.size() << std::endl;
-
-    // Pathfinding finder;
-    // std::deque<std::shared_ptr<Edge::Vertex>> result = finder.calculateDijkstra(graph, graph.vertices[0], graph.vertices[20]);
-
-    // for (int i = 0; i < result.size(); i++) {
-    //     std::cout << result[i]->toString() << std::endl;
-    // }
+    for (int i = 0; i < result.size(); i++) {
+        std::cout << result[i]->id << std::endl;
+    }
 
     return EXIT_SUCCESS;
 }
