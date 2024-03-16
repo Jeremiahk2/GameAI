@@ -133,7 +133,6 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateDijkstra(Graph g
             //Return the sequence regardless.
             return s;
         }
-        std::cout << numVisited << std::endl;
         //Erase the vertex from the unvisited list.
         graph.vertices[u->id]->visited = true;
         numVisited++;

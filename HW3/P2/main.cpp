@@ -12,43 +12,11 @@
 
 int main() {
 
-    Graph graph;
-
-    // std::ifstream infile("input.txt");
-    // std::string lineString;
-    // infile >> lineString;
-    // infile >> lineString;
+    Graph smallGraph;
     
-    // //Loop through each edge.
-    // while (lineString != std::string("ArrowLine1PointAx,ArrowLine1PointAy,ArrowLine1PointBx,ArrowLine1PointBy,ArrowLine2PointAx,ArrowLine2PointAy,ArrowLine2PointBx,ArrowLine2PointBy")) {
-    //     std::stringstream data(lineString);
-    //     //Set up vertex fields.
-    //     std::string valueOne;
-    //     std::string valueTwo;
-    //     std::string weight;
-    //     std::shared_ptr<Edge::Vertex> start(new Edge::Vertex);
-    //     std::shared_ptr<Edge::Vertex> end(new Edge::Vertex);
-    //     //Get input and put it into our vertices.
-    //     getline(data, valueOne, ',');
-    //     getline(data, valueTwo, ',');
-    //     start->position = sf::Vector2f(stoi(valueOne), stoi(valueTwo));
-    //     getline(data, valueOne, ',');
-    //     getline(data, valueTwo, ',');
-    //     end->position = sf::Vector2f(stoi(valueOne), stoi(valueTwo));
-    //     getline(data, weight, ',');
-    //     //Create edge.
-    //     std::shared_ptr<Edge> edge(new Edge);
-    //     edge->start = start;
-    //     edge->end = end;
-    //     edge->weight = stof(weight);
-    //     //Add edge to graph
-    //     graph.addEdge(edge);
-    //     infile >> lineString;
-    // }
-
-    std::ifstream infile("test-files/large.txt");
+    std::ifstream sinFile("test-files/small.txt");
     std::string lineString;
-    infile >> lineString;
+    sinFile >> lineString;
     while (lineString != std::string("Edges:")) {
         std::stringstream data(lineString);
         std::string index;
@@ -60,11 +28,53 @@ int main() {
         getline(data, y, ',');
         vertex->id = stoi(index);
         vertex->position = sf::Vector2f(stoi(x), stoi(y));
-        graph.vertices.push_back(vertex);
+        smallGraph.vertices.push_back(vertex);
 
-        infile >> lineString;
+        sinFile >> lineString;
     }
-    infile >> lineString;
+    sinFile >> lineString;
+    while (lineString != std::string("End")) {
+        std::stringstream data(lineString);
+        //Set up vertex fields.
+        std::string valueOne;
+        std::string valueTwo;
+        std::string weight;
+        //Get input and put it into our vertices.
+        getline(data, valueOne, ',');
+        getline(data, valueTwo, ',');
+        getline(data, weight, ',');
+        //Create edge.
+        std::shared_ptr<Edge> edge(new Edge);
+        edge->start = smallGraph.vertices[stoi(valueOne)];
+        edge->end = smallGraph.vertices[stoi(valueTwo)];
+        edge->weight = stof(weight);
+        //Add edge to graph
+        smallGraph.addEdge(edge);
+        sinFile >> lineString;
+    }
+
+
+
+    Graph largeGraph;
+
+    std::ifstream linFile("test-files/large.txt");
+    linFile >> lineString;
+    while (lineString != std::string("Edges:")) {
+        std::stringstream data(lineString);
+        std::string index;
+        std::string x;
+        std::string y;
+        std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex);
+        getline(data, index, ',');
+        getline(data, x, ',');
+        getline(data, y, ',');
+        vertex->id = stoi(index);
+        vertex->position = sf::Vector2f(stoi(x), stoi(y));
+        largeGraph.vertices.push_back(vertex);
+
+        linFile >> lineString;
+    }
+    linFile >> lineString;
     int count = 0;
     while (lineString != std::string("End")) {
         std::stringstream data(lineString);
@@ -78,20 +88,31 @@ int main() {
         getline(data, weight, ',');
         //Create edge.
         std::shared_ptr<Edge> edge(new Edge);
-        edge->start = graph.vertices[stoi(valueOne)];
-        edge->end = graph.vertices[stoi(valueTwo)];
+        edge->start = largeGraph.vertices[stoi(valueOne)];
+        edge->end = largeGraph.vertices[stoi(valueTwo)];
         edge->weight = stof(weight);
         //Add edge to graph
-        graph.addEdge(edge);
-        infile >> lineString;
+        largeGraph.addEdge(edge);
+        linFile >> lineString;
         count++;
     }
 
-    Pathfinding finder;
-    std::deque<std::shared_ptr<Edge::Vertex>> result = finder.calculateDijkstra(graph, graph.vertices[0], graph.vertices[50000]);
+    Pathfinding smallFinder;
+    std::deque<std::shared_ptr<Edge::Vertex>> smallResult = smallFinder.calculateDijkstra(smallGraph, smallGraph.vertices[0], smallGraph.vertices[31]);
 
-    for (int i = 0; i < result.size(); i++) {
-        std::cout << result[i]->id << std::endl;
+    Pathfinding largeFinder;
+    std::deque<std::shared_ptr<Edge::Vertex>> largeResult = largeFinder.calculateDijkstra(largeGraph, largeGraph.vertices[0], largeGraph.vertices[20]);
+
+
+    std::cout << "Small Result: " << std::endl;
+    for (int i = 0; i < smallResult.size(); i++) {
+        std::cout << smallResult[i]->id << std::endl;
+    }
+    std::cout << std::endl;
+
+    std::cout << "Large Result: " << std::endl;
+    for (int i = 0; i < largeResult.size(); i++) {
+        std::cout << largeResult[i]->id << std::endl;
     }
 
     return EXIT_SUCCESS;
