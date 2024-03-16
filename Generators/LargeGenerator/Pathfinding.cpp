@@ -44,8 +44,8 @@ bool Edge::equals(Edge e) {
 
 std::string Edge::toString() {
     std::string rtnString;
-    rtnString += std::to_string((int)start->position.x) + "," + std::to_string((int)start->position.y) + "," +
-        std::to_string((int)end->position.x) + "," + std::to_string((int)end->position.y) + "," + std::to_string(weight);
+    rtnString += std::to_string(start->id) + "," +
+        std::to_string(end->id) + "," + std::to_string(weight);
     return rtnString;
 }
 

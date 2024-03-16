@@ -97,13 +97,15 @@ int main() {
 
     std::ofstream output ("output.txt", std::ofstream::out);
     for (int i = 0; i < vertices.size(); i++) {
-        output << vertices[i]->toString()<< std::endl;
+        vertices[i]->id = i;
+        output << i << "," <<vertices[i]->toString()<< std::endl;
     }
     std::cout << "Outputting vertices done" << std::endl;
     output << "Edges:" << std::endl;
     for (int i = 0; i < edges.size(); i++) {
         output << edges[i]->toString() << std::endl;
     }
+    output << "End" << std::endl;
     std::cout << "Outputting edges done" << std::endl;
 
     std::cout << "Final number of Vertices: " << vertices.size() << std::endl;

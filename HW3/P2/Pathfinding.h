@@ -16,6 +16,8 @@ class Edge {
         public:
         std::vector<std::shared_ptr<Edge>> outgoingEdges;
 
+        int id;
+
         sf::Vector2f position; //Can be X,Y coordinates, or for non-euclidean, can be an ID, like 1,1 for an ID of 1.
 
         Vertex(sf::Vector2f position);

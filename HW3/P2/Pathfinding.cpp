@@ -15,8 +15,6 @@ std::shared_ptr<Edge::Vertex> Graph::addVertex(std::shared_ptr<Edge::Vertex> v) 
 
 void Graph::addEdge(std::shared_ptr<Edge> e) {
     
-    e->start = addVertex(e->start);
-    e->end = addVertex(e->end);
     e->start->outgoingEdges.push_back(e);
     edges.push_back(e);
 }
