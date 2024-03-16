@@ -8,6 +8,7 @@
 #include <deque>
 #include <limits>
 #include <cfloat>
+#include <set>
 
 
 class Edge {
@@ -54,7 +55,7 @@ class Graph {
 
 class Pathfinding {
 public:
-    std::deque<float> distances;
+    std::multimap<float, int> distances;
     std::deque<std::shared_ptr<Edge::Vertex>> prev;
     std::deque<std::shared_ptr<Edge::Vertex>> unvisited;
 

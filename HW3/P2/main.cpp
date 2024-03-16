@@ -88,7 +88,7 @@ int main() {
     }
 
     Pathfinding finder;
-    std::deque<std::shared_ptr<Edge::Vertex>> result = finder.calculateDijkstra(graph, graph.vertices[0], graph.vertices[20]);
+    std::deque<std::shared_ptr<Edge::Vertex>> result = finder.calculateDijkstra(graph, graph.vertices[0], graph.vertices[50000]);
 
     for (int i = 0; i < result.size(); i++) {
         std::cout << result[i]->id << std::endl;
