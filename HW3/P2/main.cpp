@@ -97,11 +97,13 @@ int main() {
         count++;
     }
 
-    Pathfinding smallFinder;
-    std::deque<std::shared_ptr<Edge::Vertex>> smallResult = smallFinder.calculateDijkstra(smallGraph, smallGraph.vertices[0], smallGraph.vertices[31]);
+    // Pathfinding smallFinder;
+    // std::deque<std::shared_ptr<Edge::Vertex>> smallResult = smallFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[31]);
 
-    Pathfinding largeFinder;
-    std::deque<std::shared_ptr<Edge::Vertex>> largeResult = largeFinder.calculateDijkstra(largeGraph, largeGraph.vertices[0], largeGraph.vertices[20]);
+    Pathfinding largeDijkstra;
+    std::deque<std::shared_ptr<Edge::Vertex>> largeResult = largeDijkstra.calculateAStar(largeGraph, largeGraph.vertices[0], largeGraph.vertices[20]);
+
+
 
 
     std::cout << "Small Result: " << std::endl;

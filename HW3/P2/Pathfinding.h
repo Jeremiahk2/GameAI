@@ -56,19 +56,13 @@ class Graph {
 class Pathfinding {
 public:
     std::multimap<float, int> distances;
+    std::multimap<float, int> heuristics;
     std::deque<std::shared_ptr<Edge::Vertex>> prev;
     std::deque<std::shared_ptr<Edge::Vertex>> unvisited;
 
-    int findIndex(Graph graph, std::shared_ptr<Edge> edge);
-
-    int findIndex(Graph graph, std::shared_ptr<Edge::Vertex> vertex);
-
-    void eraseEdge(Graph graph, std::shared_ptr<Edge> edge);
-    void eraseVertex(Graph graph, std::shared_ptr<Edge::Vertex> vertex);
-
-    bool contains(std::deque<std::shared_ptr<Edge::Vertex>> vertices, std::shared_ptr<Edge::Vertex> vertex);
-
     std::deque<std::shared_ptr<Edge::Vertex>> calculateDijkstra(Graph graph, std::shared_ptr<Edge::Vertex>source, std::shared_ptr<Edge::Vertex>goal);
+
+    float euclidean(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 
     std::deque<std::shared_ptr<Edge::Vertex>> calculateAStar(Graph graph, std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 };
