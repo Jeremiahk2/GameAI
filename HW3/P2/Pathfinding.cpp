@@ -150,6 +150,7 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph grap
         float min = FLT_MAX;
         //Loop through the distances array and find the vertex with the smallest distance that is unvisited. This is our current vertex. First one should be source.
         for (auto it = heuristics.begin(); it != heuristics.end();) {
+            //Realistically this loop should only happen once since the first value should be a minimum, unvisited node. But with inadmissable it might not be.
             if (it->first <= min && !graph.vertices[it->second]->visited) {
                 min = it->first;
                 u = graph.vertices[it->second];

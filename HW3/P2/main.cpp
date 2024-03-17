@@ -11,7 +11,7 @@
 #include <sstream>
 
 int main() {
-
+    srand(time(0));
     Graph smallGraph;
     
     std::ifstream sinFile("test-files/small.txt");
@@ -96,26 +96,104 @@ int main() {
         linFile >> lineString;
         count++;
     }
-
-    // Pathfinding smallFinder;
-    // std::deque<std::shared_ptr<Edge::Vertex>> smallResult = smallFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[31]);
-
-    Pathfinding largeDijkstra;
-    std::deque<std::shared_ptr<Edge::Vertex>> largeResult = largeDijkstra.calculateAStar(largeGraph, largeGraph.vertices[0], largeGraph.vertices[20]);
+    Timeline global;
+    int tic = 1;
+    Timeline frameTime(&global, tic);
 
 
+    int numTests = 10;
+    int totalTime = 0;
+    int totalFill = 0;
+    int totalFringe = 0;
+    std::vector<int>endpoints;
+    for (int i = 0; i < numTests; i++) {
+        endpoints.push_back((rand() % (largeGraph.vertices.size() - 1)) + 1);
+    }
 
 
-    std::cout << "Small Result: " << std::endl;
-    for (int i = 0; i < smallResult.size(); i++) {
-        std::cout << smallResult[i]->id << std::endl;
+    for (int i = 0; i < numTests; i++) {
+        Pathfinding largeDijkstra;
+        int startTime = frameTime.getTime();
+        largeDijkstra.calculateDijkstra(largeGraph, largeGraph.vertices[0], largeGraph.vertices[endpoints[i]]);
+        int elapsedTime = frameTime.getTime() - startTime;
+        totalTime += elapsedTime;
+
+
+        int numFill = 0; //Number of fill/closed set.
+        for (int i = 0; i < largeGraph.vertices.size(); i++) {
+            if (largeGraph.vertices[i]->visited) {
+                numFill++;
+            }
+            largeGraph.vertices[i]->visited = false;
+        }
+        int numFringe = 0;
+        for (auto it = largeDijkstra.distances.begin(); it != largeDijkstra.distances.end();) {
+            if (it->first != FLT_MAX) {
+                numFringe++;
+                it++;
+            }
+            else {
+                it = largeDijkstra.distances.end();
+            }
+        }
+        totalFill += numFill;
+        totalFringe += numFringe;
+    }
+    std::cout << "-Dijkstra stats-" << std::endl;
+    std::cout << "Average time: " << totalTime / numTests << std::endl;
+    std::cout << "Average Fill: " << totalFill / numTests << std::endl;
+    std::cout << "Average Fringe: " << totalFringe / numTests << std::endl;
+
+
+    totalTime = 0;
+    totalFill = 0;
+    totalFringe = 0;
+    for (int i = 0; i < numTests; i++) {
+        Pathfinding largeAstar;
+        int startTime = frameTime.getTime();
+        largeAstar.calculateAStar(largeGraph, largeGraph.vertices[0], largeGraph.vertices[endpoints[i]]);
+        int elapsedTime = frameTime.getTime() - startTime;
+        totalTime += elapsedTime;
+
+        int numFill = 0;
+        for (int i = 0; i < largeGraph.vertices.size(); i++) {
+            if (largeGraph.vertices[i]->visited) {
+                numFill++;
+            }
+            largeGraph.vertices[i]->visited = false;
+        }
+        int numFringe = 0;
+        for (auto it = largeAstar.heuristics.begin(); it != largeAstar.heuristics.end();) {
+            if (it->first != FLT_MAX) {
+                numFringe++;
+                it++;
+            }
+            else {
+                it = largeAstar.heuristics.end();
+            }
+        }
+        totalFill += numFill;
+        totalFringe += numFringe;
+    }
+
+    std::cout << "-A* stats-" << std::endl;
+    std::cout << "Average time: " << totalTime / numTests << std::endl;
+    std::cout << "Average Fill: " << totalFill / numTests << std::endl;
+    std::cout << "Average Fringe: " << totalFringe / numTests << std::endl;
+
+    Pathfinding smallFinder;
+    std::deque<std::shared_ptr<Edge::Vertex>> resultOne = smallFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[31]);
+
+    std::cout << "Result One: " << std::endl;
+    for (int i = 0; i < resultOne.size(); i++) {
+        std::cout << resultOne[i]->id << std::endl;
     }
     std::cout << std::endl;
 
-    std::cout << "Large Result: " << std::endl;
-    for (int i = 0; i < largeResult.size(); i++) {
-        std::cout << largeResult[i]->id << std::endl;
-    }
+    // std::cout << "Result Two: " << std::endl;
+    // for (int i = 0; i < resultTwo.size(); i++) {
+    //     std::cout << resultTwo[i]->id << std::endl;
+    // }
 
     return EXIT_SUCCESS;
 }
