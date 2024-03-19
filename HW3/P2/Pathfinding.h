@@ -64,5 +64,7 @@ public:
 
     float euclidean(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 
+    float manhattan(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
+
     std::deque<std::shared_ptr<Edge::Vertex>> calculateAStar(Graph graph, std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 };

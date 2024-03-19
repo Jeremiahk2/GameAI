@@ -181,14 +181,26 @@ int main() {
     std::cout << "Average Fill: " << totalFill / numTests << std::endl;
     std::cout << "Average Fringe: " << totalFringe / numTests << std::endl;
 
-    Pathfinding smallFinder;
-    std::deque<std::shared_ptr<Edge::Vertex>> resultOne = smallFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[31]);
+    // Pathfinding smallAFinder;
+    // Pathfinding smallDFinder;
 
-    std::cout << "Result One: " << std::endl;
-    for (int i = 0; i < resultOne.size(); i++) {
-        std::cout << resultOne[i]->id << std::endl;
-    }
-    std::cout << std::endl;
+    // int startTime = frameTime.getTime();
+    // std::deque<std::shared_ptr<Edge::Vertex>> resultOne = smallAFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[27]);
+    // std::cout << frameTime.getTime() - startTime << std::endl;
+
+    // for (int i = 0; i < smallGraph.vertices.size(); i++) {
+    //     smallGraph.vertices[i]->visited = false;
+    // }
+
+    // startTime = frameTime.getTime();
+    // std::deque<std::shared_ptr<Edge::Vertex>> resultTwo = smallDFinder.calculateDijkstra(smallGraph, smallGraph.vertices[0], smallGraph.vertices[27]);
+    // std::cout << frameTime.getTime() - startTime << std::endl;
+
+    // std::cout << "Result One: " << std::endl;
+    // for (int i = 0; i < resultOne.size(); i++) {
+    //     std::cout << resultOne[i]->id << std::endl;
+    // }
+    // std::cout << std::endl;
 
     // std::cout << "Result Two: " << std::endl;
     // for (int i = 0; i < resultTwo.size(); i++) {

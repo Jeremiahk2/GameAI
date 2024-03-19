@@ -125,6 +125,11 @@ float Pathfinding::euclidean(std::shared_ptr<Edge::Vertex> source, std::shared_p
     return sqrt(pow((source->position - goal->position).x, 2) + pow((source->position - goal->position).y, 2));
 }
 
+float Pathfinding::manhattan(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal) {
+    sf::Vector2f path = source->position - goal->position;
+    return abs(path.x) + abs(path.y);
+}
+
 std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph graph, std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal) {
     std::deque<std::shared_ptr<Edge::Vertex>> s;
     std::map<int, std::multimap<float, int>::iterator> indices;
@@ -188,6 +193,7 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph grap
                 if (alt < indices.at(v->id)->first) {
                     distances.erase(indices.at(v->id));
                     indices.insert_or_assign(v->id, distances.insert({alt, v->id}));
+                    heuristics.erase(heuristicIndices.at(v->id));
                     heuristicIndices.insert_or_assign(v->id, heuristics.insert({alt + euclidean(v, goal), v->id}));
                     prev[v->id] = u;
                 }
