@@ -96,6 +96,9 @@ int main() {
         linFile >> lineString;
         count++;
     }
+
+    linFile.close();
+    sinFile.close();
     Timeline global;
     int tic = 1;
     Timeline frameTime(&global, tic);
@@ -110,7 +113,9 @@ int main() {
         endpoints.push_back((rand() % (largeGraph.vertices.size() - 1)) + 1);
     }
 
-
+    totalTime = 0;
+    totalFill = 0;
+    totalFringe = 0;
     for (int i = 0; i < numTests; i++) {
         Pathfinding largeDijkstra;
         int startTime = frameTime.getTime();
