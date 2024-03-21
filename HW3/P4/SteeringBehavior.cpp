@@ -252,8 +252,22 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
 }
 
 void Pathfollowing::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+    Kinematic goalOrientation;
+    float theta;
+    if ((character.velocity).x != 0) {
+        theta = atan2((character.velocity).y, (character.velocity).x);
+    }
+    else {
+        theta = atan2((character.velocity).y, 0);
+    }
+    goalOrientation.orientation = theta;
+
+
     PositionMatch arrival;
     arrival.calculateAcceleration(steering, character, goal);
+
+    OrientationMatch orienter;
+    orienter.calculateAcceleration(steering, character, goalOrientation);
 }
 
 float Pathfollowing::euclidean(sf::Vector2f source, sf::Vector2f goal) {

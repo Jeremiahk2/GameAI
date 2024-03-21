@@ -121,24 +121,72 @@ int main() {
         for (int j = 1; j < verticalTiles - 1; j++) {
             if (tiles[i * verticalTiles + j].getFillColor() != red) {
                 //Set up edges to surrounding viable neighbors.
-                for (int currentI = i - 1; currentI <= i + 1; currentI++) {
+                // I++ equals to the right. J++ equals down
 
-                    for (int currentJ = j - 1; currentJ <= j + 1; currentJ++) {
+                std::deque<std::pair<int, int>> valid;
+                int currentI = i - 1;
+                int currentJ = j;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red) {
+                    valid.push_back({currentI, currentJ});
+                }
+                currentI = i + 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red) {
+                    valid.push_back({currentI, currentJ});
+                }
+                currentI = i;
+                currentJ = j - 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red) {
+                    valid.push_back({currentI, currentJ});
+                }
+                currentJ = j + 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red) {
+                    valid.push_back({currentI, currentJ});
+                }
+                currentI = i + 1;
+                currentJ = j + 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI - 1) * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI) * verticalTiles + currentJ - 1].getFillColor() != red) {
 
-                        if ( !(currentI == i && currentJ == j) && tiles[currentI * verticalTiles + currentJ].getFillColor() != red) {
-                            std::shared_ptr<Edge> edge(new Edge);
-                            if (currentI != i && currentJ != j) {
-                                edge->weight = diagonalWeight;
-                            }
-                            else {
-                                edge->weight = straightWeight;
-                            }
-                            edge->start = fillers[i * verticalTiles + j];
-                            edge->end = fillers[currentI * verticalTiles + currentJ];
-                            fillers[i * verticalTiles + j]->outgoingEdges.push_back(edge);
-                            graph.edges.push_back(edge);
-                        }
+                    valid.push_back({currentI, currentJ});
+                }
+                currentI = i - 1;
+                currentJ = j + 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI + 1) * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI) * verticalTiles + currentJ - 1].getFillColor() != red) {
+
+                    valid.push_back({currentI, currentJ});
+                }
+                currentI = i + 1;
+                currentJ = j - 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI - 1) * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI) * verticalTiles + currentJ + 1].getFillColor() != red) {
+
+                    valid.push_back({currentI, currentJ});
+                }
+                currentI = i - 1;
+                currentJ = j - 1;
+                if (tiles[currentI * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI + 1) * verticalTiles + currentJ].getFillColor() != red &&
+                    tiles[(currentI) * verticalTiles + currentJ + 1].getFillColor() != red) {
+
+                    valid.push_back({currentI, currentJ});
+                }
+                std::cout << valid.size() << std::endl;
+                for (int k = 0; k < valid.size(); k++) {
+                    std::shared_ptr<Edge> edge(new Edge);
+                    if (valid[k].first != i && valid[k].second != j) {
+                        edge->weight = diagonalWeight;
                     }
+                    else {
+                        edge->weight = straightWeight;
+                    }
+                    edge->start = fillers[i * verticalTiles + j];
+                    edge->end = fillers[valid[k].first * verticalTiles + valid[k].second];
+                    fillers[i * verticalTiles + j]->outgoingEdges.push_back(edge);
+                    graph.edges.push_back(edge);
                 }
             }   
         }
@@ -154,7 +202,7 @@ int main() {
     //     clickCircles.push_back(c);
     // }
 
-    //Set up steering behaviors.
+    // Set up steering behaviors.
     Kinematic target;
     target.pos = b.kinematic.pos;
 
