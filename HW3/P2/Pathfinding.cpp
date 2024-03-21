@@ -59,9 +59,7 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateDijkstra(Graph g
     //Initialize data structures to infinity/undefined/initial amount.
     for (int i = 0; i < graph.vertices.size(); i++) {
         prev.push_back(NULL);
-        unvisited.push_back(graph.vertices[i]);
         indices.insert({i, distances.insert({FLT_MAX, i})});
-
     }
     //The distance to the source point is zero.
     distances.erase(indices.at(source->id));
@@ -108,7 +106,6 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateDijkstra(Graph g
             if (!v->visited) {
                 // Get the accumulated distance to this vertex, plus the new edge weight to the neighboring vertex.
                 float alt = min + u->outgoingEdges[i]->weight;
-                // float alt = distances[u->id] + u->outgoingEdges[i]->weight;
                 //If it's shorter than what is written down, replace it and update prev as well.
                 if (alt < indices.at(v->id)->first) {
                     distances.erase(indices.at(v->id));
@@ -132,33 +129,30 @@ float Pathfinding::manhattan(std::shared_ptr<Edge::Vertex> source, std::shared_p
 
 std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph graph, std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal) {
     std::deque<std::shared_ptr<Edge::Vertex>> s;
-    std::map<int, std::multimap<float, int>::iterator> indices;
-    std::map<int, std::multimap<float, int>::iterator> heuristicIndices;
+    std::map<int, std::multimap<float, std::pair<float, int>>::iterator> heuristicIndices;
     //Initialize data structures to infinity/undefined/initial amount.
     for (int i = 0; i < graph.vertices.size(); i++) {
         prev.push_back(NULL);
-        unvisited.push_back(graph.vertices[i]);
-        indices.insert({i, distances.insert({FLT_MAX, i})});
-        heuristicIndices.insert({i, heuristics.insert({FLT_MAX, i})});
+        heuristicIndices.insert({i, heuristics.insert({FLT_MAX, {FLT_MAX, i}})});
     }
     //The distance to the source point is zero.
-    distances.erase(indices.at(source->id));
-    indices.insert_or_assign(source->id, distances.insert({0.f, source->id}));
     heuristics.erase(heuristicIndices.at(source->id));
-    heuristicIndices.insert_or_assign(source->id, heuristics.insert({euclidean(source, goal), source->id}));
-
+    heuristicIndices.insert_or_assign(source->id, heuristics.insert({manhattan(source, goal), {0.f, source->id}}));
+    
     int numVisited = 0;
 
     while (numVisited < graph.vertices.size()) {
         //The current vertex.
         std::shared_ptr<Edge::Vertex> u;
         float min = FLT_MAX;
+        float minDistance = FLT_MAX;
         //Loop through the distances array and find the vertex with the smallest distance that is unvisited. This is our current vertex. First one should be source.
         for (auto it = heuristics.begin(); it != heuristics.end();) {
             //Realistically this loop should only happen once since the first value should be a minimum, unvisited node. But with inadmissable it might not be.
-            if (it->first <= min && !graph.vertices[it->second]->visited) {
+            if (it->first <= min && !graph.vertices[it->second.second]->visited) {
                 min = it->first;
-                u = graph.vertices[it->second];
+                minDistance = it->second.first;
+                u = graph.vertices[it->second.second];
                 heuristics.erase(it);
                 it = heuristics.end();
             }
@@ -188,13 +182,11 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph grap
             std::shared_ptr<Edge::Vertex> v = u->outgoingEdges[i]->end;
             if (!v->visited) {
                 // Get the accumulated distance to this vertex, plus the new edge weight to the neighboring vertex.
-                float alt = indices.at(u->id)->first + u->outgoingEdges[i]->weight;
+                float alt = minDistance + u->outgoingEdges[i]->weight;
                 //If it's shorter than what is written down, replace it and update prev as well.
-                if (alt < indices.at(v->id)->first) {
-                    distances.erase(indices.at(v->id));
-                    indices.insert_or_assign(v->id, distances.insert({alt, v->id}));
+                if (alt < heuristicIndices.at(v->id)->second.first) {
                     heuristics.erase(heuristicIndices.at(v->id));
-                    heuristicIndices.insert_or_assign(v->id, heuristics.insert({alt + euclidean(v, goal), v->id}));
+                    heuristicIndices.insert_or_assign(v->id, heuristics.insert({alt + manhattan(v, goal), {alt, v->id}}));
                     prev[v->id] = u;
                 }
             }

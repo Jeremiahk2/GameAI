@@ -104,7 +104,7 @@ int main() {
     Timeline frameTime(&global, tic);
 
 
-    int numTests = 10;
+    int numTests = 2000;
     int totalTime = 0;
     int totalFill = 0;
     int totalFringe = 0;
@@ -113,41 +113,46 @@ int main() {
         endpoints.push_back((rand() % (largeGraph.vertices.size() - 1)) + 1);
     }
 
-    totalTime = 0;
-    totalFill = 0;
-    totalFringe = 0;
+    std::vector<int>startpoints;
     for (int i = 0; i < numTests; i++) {
-        Pathfinding largeDijkstra;
-        int startTime = frameTime.getTime();
-        largeDijkstra.calculateDijkstra(largeGraph, largeGraph.vertices[0], largeGraph.vertices[endpoints[i]]);
-        int elapsedTime = frameTime.getTime() - startTime;
-        totalTime += elapsedTime;
-
-
-        int numFill = 0; //Number of fill/closed set.
-        for (int i = 0; i < largeGraph.vertices.size(); i++) {
-            if (largeGraph.vertices[i]->visited) {
-                numFill++;
-            }
-            largeGraph.vertices[i]->visited = false;
-        }
-        int numFringe = 0;
-        for (auto it = largeDijkstra.distances.begin(); it != largeDijkstra.distances.end();) {
-            if (it->first != FLT_MAX) {
-                numFringe++;
-                it++;
-            }
-            else {
-                it = largeDijkstra.distances.end();
-            }
-        }
-        totalFill += numFill;
-        totalFringe += numFringe;
+        startpoints.push_back((rand() % (largeGraph.vertices.size() - 1)) + 1);
     }
-    std::cout << "-Dijkstra stats-" << std::endl;
-    std::cout << "Average time: " << totalTime / numTests << std::endl;
-    std::cout << "Average Fill: " << totalFill / numTests << std::endl;
-    std::cout << "Average Fringe: " << totalFringe / numTests << std::endl;
+
+    // totalTime = 0;
+    // totalFill = 0;
+    // totalFringe = 0;
+    // for (int i = 0; i < numTests; i++) {
+    //     Pathfinding largeDijkstra;
+    //     int startTime = frameTime.getTime();
+    //     largeDijkstra.calculateDijkstra(largeGraph, largeGraph.vertices[startpoints[i]], largeGraph.vertices[endpoints[i]]);
+    //     int elapsedTime = frameTime.getTime() - startTime;
+    //     totalTime += elapsedTime;
+
+
+    //     int numFill = 0; //Number of fill/closed set.
+    //     for (int i = 0; i < largeGraph.vertices.size(); i++) {
+    //         if (largeGraph.vertices[i]->visited) {
+    //             numFill++;
+    //         }
+    //         largeGraph.vertices[i]->visited = false;
+    //     }
+    //     int numFringe = 0;
+    //     for (auto it = largeDijkstra.distances.begin(); it != largeDijkstra.distances.end();) {
+    //         if (it->first != FLT_MAX) {
+    //             numFringe++;
+    //             it++;
+    //         }
+    //         else {
+    //             it = largeDijkstra.distances.end();
+    //         }
+    //     }
+    //     totalFill += numFill;
+    //     totalFringe += numFringe;
+    // }
+    // std::cout << "-Dijkstra stats-" << std::endl;
+    // std::cout << "Average time: " << totalTime / numTests << std::endl;
+    // std::cout << "Average Fill: " << totalFill / numTests << std::endl;
+    // std::cout << "Average Fringe: " << totalFringe / numTests << std::endl;
 
 
     totalTime = 0;
@@ -156,7 +161,7 @@ int main() {
     for (int i = 0; i < numTests; i++) {
         Pathfinding largeAstar;
         int startTime = frameTime.getTime();
-        largeAstar.calculateAStar(largeGraph, largeGraph.vertices[0], largeGraph.vertices[endpoints[i]]);
+        largeAstar.calculateAStar(largeGraph, largeGraph.vertices[startpoints[i]], largeGraph.vertices[endpoints[i]]);
         int elapsedTime = frameTime.getTime() - startTime;
         totalTime += elapsedTime;
 
@@ -190,16 +195,16 @@ int main() {
     // Pathfinding smallDFinder;
 
     // int startTime = frameTime.getTime();
-    // std::deque<std::shared_ptr<Edge::Vertex>> resultOne = smallAFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[27]);
-    // std::cout << frameTime.getTime() - startTime << std::endl;
+    // std::deque<std::shared_ptr<Edge::Vertex>> resultOne = smallAFinder.calculateAStar(smallGraph, smallGraph.vertices[0], smallGraph.vertices[5]);
+    // // std::cout << frameTime.getTime() - startTime << std::endl;
 
     // for (int i = 0; i < smallGraph.vertices.size(); i++) {
     //     smallGraph.vertices[i]->visited = false;
     // }
 
     // startTime = frameTime.getTime();
-    // std::deque<std::shared_ptr<Edge::Vertex>> resultTwo = smallDFinder.calculateDijkstra(smallGraph, smallGraph.vertices[0], smallGraph.vertices[27]);
-    // std::cout << frameTime.getTime() - startTime << std::endl;
+    // std::deque<std::shared_ptr<Edge::Vertex>> resultTwo = smallDFinder.calculateDijkstra(smallGraph, smallGraph.vertices[0], smallGraph.vertices[5]);
+    // // std::cout << frameTime.getTime() - startTime << std::endl;
 
     // std::cout << "Result One: " << std::endl;
     // for (int i = 0; i < resultOne.size(); i++) {

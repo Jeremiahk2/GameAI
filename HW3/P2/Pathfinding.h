@@ -56,9 +56,8 @@ class Graph {
 class Pathfinding {
 public:
     std::multimap<float, int> distances;
-    std::multimap<float, int> heuristics;
+    std::multimap<float, std::pair<float, int>> heuristics;
     std::deque<std::shared_ptr<Edge::Vertex>> prev;
-    std::deque<std::shared_ptr<Edge::Vertex>> unvisited;
 
     std::deque<std::shared_ptr<Edge::Vertex>> calculateDijkstra(Graph graph, std::shared_ptr<Edge::Vertex>source, std::shared_ptr<Edge::Vertex>goal);
 

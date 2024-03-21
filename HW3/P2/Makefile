@@ -42,9 +42,9 @@ endif
 uname_s := $(shell uname -s)
 %.o: %.cpp
 ifeq ($(uname_s),Darwin)
-	$(MACOS_COMPILER) -std=c++17 -c $^ -o $@ -I$(MACOS_INCLUDE)
+	$(MACOS_COMPILER) -g -std=c++17 -c $^ -o $@ -I$(MACOS_INCLUDE)
 else ifeq ($(uname_s),Linux)
-	$(UBUNTU_COMPILER) -std=c++17 -c $^ -o $@ -I$(UBUNTU_INCLUDE)
+	$(UBUNTU_COMPILER) -g -std=c++17 -c $^ -o $@ -I$(UBUNTU_INCLUDE)
 endif
 
 .PHONY: clean
