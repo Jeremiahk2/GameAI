@@ -248,3 +248,27 @@ void Flocking::calculateAcceleration(SteeringData *steering, Kinematic character
     orienter.calculateAcceleration(steering, character, goal);
 }
 
+void Pathfollowing::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
+    PositionMatch arrival;
+    arrival.calculateAcceleration(steering, character, goal);
+}
+
+float Pathfollowing::euclidean(sf::Vector2f source, sf::Vector2f goal) {
+    return sqrt(pow((source - goal).x, 2) + pow((source - goal).y, 2));
+}
+
+int Pathfollowing::followPath(std::deque<Edge::Vertex> path, int pathOffset, float predictTime, Kinematic character) {
+    sf::Vector2f futurePos = character.pos + character.velocity * predictTime;
+    int mindex = 0;
+    float min = FLT_MAX;
+    for (int i = 0; i < path.size(); i++) {
+        //Pick the closest distance. If two are equal, pick the one ahead of you.
+        float currentValue = Pathfollowing::euclidean(path[i].position, futurePos);
+        if (currentValue <= min) {
+            min = currentValue;
+            mindex = i;
+        }
+    }
+    return mindex + pathOffset;
+}
+

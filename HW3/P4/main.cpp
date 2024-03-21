@@ -1,6 +1,6 @@
 #include "Timeline.h"
 #include "SteeringBehavior.h"
-#include "Pathfinding.cpp"
+#include "Pathfinding.h"
 
 #include <cstdio>
 #include <deque>
@@ -19,34 +19,49 @@ int main() {
     // Create a window with the same pixel depth as the desktop, with 144 frames per second.
     sf::RenderWindow window;
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+    int winWidth = 640;
+    int winHeight = 480;
     window.create(sf::VideoMode(640, 480, desktop.bitsPerPixel), "Game Window", sf::Style::Default);
-    //Set framerate to 100 (ideally)
-    window.setFramerateLimit(100);
 
     //Set up boid texture
     sf::Texture texture;
     if (!texture.loadFromFile("Assets/boid.png"))
     {
-        // error...
+        std::cout << "Error" << std::endl;
     }
-
-    //Set up boids
-    int numBoids = 40;
-    for (int i = 0; i < numBoids; i++) {
-        SteeringBehavior::boids.push_back(new Boid(&window, texture));
-        sf::Vector2f vector = SteeringBehavior::boids.back()->kinematic.pos;
-        vector.x += Wander::randBinomial();
-        vector.y += Wander::randBinomial();
-        SteeringBehavior::boids.back()->kinematic.pos = vector;
-    }
+    //Set up boid
+    Boid b(&window, texture);
+    SteeringBehavior::boids.push_back(&b);
+    //Set up clickCircles 
     std::deque<sf::CircleShape> clickCircles;
 
     //Set up steering behaviors.
-    Wander wander;
-    Separation separation;
-    Flocking flocking;
     Kinematic target;
+    target.pos = sf::Vector2f(0.f, 0.f);
 
+    //Set up environment
+    std::deque<sf::RectangleShape> tiles;
+    float tileSize = b.sprite.getGlobalBounds().width;
+    std::cout << tileSize << std::endl;
+    int horizontalTiles = winWidth / tileSize + 1;
+    int verticalTiles = winHeight / tileSize + 1;
+
+    for (int i = 0; i < horizontalTiles; i++) {
+        for (int j = 0; j < verticalTiles; j++) {
+            sf::RectangleShape tile;
+            tile.setSize(sf::Vector2f(tileSize, tileSize));
+            tile.setPosition(i * tileSize, j * tileSize);
+            if (j == 0 || j == verticalTiles - 1 || i == 0 || i == horizontalTiles - 1) {
+                tile.setFillColor(sf::Color::Red);
+            }
+            else {
+                tile.setFillColor(sf::Color(0, 128, 128));
+            }
+            tile.setOutlineThickness(1.f);
+            tile.setOutlineColor(sf::Color::Black);
+            tiles.push_back(tile);
+        }
+    }
 
     //Create a timeline with a tic size of 10, updating every 10 ms or 100 fps.
     Timeline global;
@@ -77,17 +92,17 @@ int main() {
 
             //Calculate acceleration for all boids.
             for (Boid *b : SteeringBehavior::boids) {
-                flocking.calculateAcceleration(b->steering, b->kinematic, target);
+                
             }
             //Update all boids
             for (Boid *b : SteeringBehavior::boids) {
                 b->update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-                if (b->kinematic.id == 0) {
-                    // std::cout << "X Velocity: " << b->kinematic.velocity.x << " Y Velocity: " << b->kinematic.velocity.y << std::endl;
-                }
             }
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
+            for (int i = 0; i < tiles.size(); i++) {
+                window.draw(tiles[i]);
+            }
             for (Boid *b : SteeringBehavior::boids) {
                 b->draw();
             }

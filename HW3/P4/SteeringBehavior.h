@@ -3,6 +3,7 @@
 #include "Boid.h"
 
 #include "SFML/Graphics.hpp"
+#include "Pathfinding.h"
 #include <SFML/OpenGL.hpp>
 #include <iostream>
 #include <ctime>
@@ -115,4 +116,15 @@ class Flocking : public SteeringBehavior {
 
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
+};
+
+class Pathfollowing : public SteeringBehavior {
+    private:
+
+    public:
+        void calculateAcceleration(SteeringData *sterring, Kinematic character, Kinematic goal) override;
+
+        static float euclidean(sf::Vector2f source, sf::Vector2f goal);
+
+        int followPath(std::deque<Edge::Vertex> path, int pathOffset, float predictTime, Kinematic character);
 };

@@ -61,9 +61,9 @@ public:
 
     std::deque<std::shared_ptr<Edge::Vertex>> calculateDijkstra(Graph graph, std::shared_ptr<Edge::Vertex>source, std::shared_ptr<Edge::Vertex>goal);
 
-    float euclidean(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
+    static float euclidean(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 
-    float manhattan(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
+    static float manhattan(std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 
     std::deque<std::shared_ptr<Edge::Vertex>> calculateAStar(Graph graph, std::shared_ptr<Edge::Vertex> source, std::shared_ptr<Edge::Vertex> goal);
 };

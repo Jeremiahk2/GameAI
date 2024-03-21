@@ -51,6 +51,7 @@ class Boid
 
         Kinematic kinematic;
         SteeringData *steering;
+        sf::Sprite sprite;
 
 
 
@@ -76,7 +77,6 @@ class Boid
         float drop_timer;
         
         //renderable objects
-        sf::Sprite sprite;
         sf::RenderWindow* window;    
 
         //point of breadcrumbs

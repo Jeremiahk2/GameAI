@@ -38,6 +38,7 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     sprite.setTexture(tex);
     sprite.setScale(0.02f, 0.02f);
     sprite.setOrigin(sf::Vector2f((sprite.getGlobalBounds().width / 2.f) / .02f, (sprite.getGlobalBounds().height / 2.f) / .02f));
+    // std::cout << sprite.getGlobalBounds().width << std::endl;
     kinematic.pos = sf::Vector2f(200.f, 200.f);
     steering = new SteeringData;
     kinematic.id = numBoids++;
