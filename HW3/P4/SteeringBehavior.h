@@ -39,9 +39,9 @@ class SteeringBehavior {
 //Class for matching position (X, Y coordinates).
 class PositionMatch : public SteeringBehavior {
     private:
-        static constexpr float RSAT = 0.f;
-        static constexpr float RDEC = 0.f;
-        static constexpr float MAXVEL = 160.f;
+        static constexpr float RSAT = 10.f;
+        static constexpr float RDEC = 60.f;
+        static constexpr float MAXVEL = 60.f;
         static constexpr float TTTV = 1.f;
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
@@ -126,5 +126,5 @@ class Pathfollowing : public SteeringBehavior {
 
         static float euclidean(sf::Vector2f source, sf::Vector2f goal);
 
-        int followPath(std::deque<Edge::Vertex> path, int pathOffset, float predictTime, Kinematic character);
+        int followPath(std::deque<std::shared_ptr<Edge::Vertex>> path, int pathOffset, float predictTime, Kinematic character);
 };

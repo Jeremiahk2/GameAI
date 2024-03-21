@@ -3,8 +3,11 @@
 std::vector<Boid *> SteeringBehavior::boids = std::vector<Boid *>();
 
 void PositionMatch::calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) {
-    // sf::Vector2f direction = goal.pos - character.pos;
     sf::Vector2f direction;
+
+    if (character.pos - goal.pos == sf::Vector2f(0.f, 0.f)) {
+        return;
+    }
     //Get the direction for X directly and by wrapping around
     float directX = goal.pos.x - character.pos.x; 
     if (directX == 0.f) {
@@ -257,17 +260,20 @@ float Pathfollowing::euclidean(sf::Vector2f source, sf::Vector2f goal) {
     return sqrt(pow((source - goal).x, 2) + pow((source - goal).y, 2));
 }
 
-int Pathfollowing::followPath(std::deque<Edge::Vertex> path, int pathOffset, float predictTime, Kinematic character) {
+int Pathfollowing::followPath(std::deque<std::shared_ptr<Edge::Vertex>> path, int pathOffset, float predictTime, Kinematic character) {
     sf::Vector2f futurePos = character.pos + character.velocity * predictTime;
     int mindex = 0;
     float min = FLT_MAX;
     for (int i = 0; i < path.size(); i++) {
         //Pick the closest distance. If two are equal, pick the one ahead of you.
-        float currentValue = Pathfollowing::euclidean(path[i].position, futurePos);
+        float currentValue = Pathfollowing::euclidean(path[i]->position, futurePos);
         if (currentValue <= min) {
             min = currentValue;
             mindex = i;
         }
+    }
+    if (mindex + pathOffset > path.size() - 1) {
+        return path.size() - 1;
     }
     return mindex + pathOffset;
 }

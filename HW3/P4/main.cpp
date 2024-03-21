@@ -35,33 +35,130 @@ int main() {
     //Set up clickCircles 
     std::deque<sf::CircleShape> clickCircles;
 
-    //Set up steering behaviors.
-    Kinematic target;
-    target.pos = sf::Vector2f(0.f, 0.f);
-
     //Set up environment
     std::deque<sf::RectangleShape> tiles;
     float tileSize = b.sprite.getGlobalBounds().width;
-    std::cout << tileSize << std::endl;
     int horizontalTiles = winWidth / tileSize + 1;
     int verticalTiles = winHeight / tileSize + 1;
 
+
+    int leftWall = 0;
+    int rightWall = horizontalTiles - 1;
+    int midRightWall = horizontalTiles - 9;
+    int midLeftWall = 8;
+    int bottomWall = verticalTiles - 1;
+    int topWall = 0;
+    int midBottomWall = verticalTiles - 9;
+    int midTopWall = 8;
+
+    //Set up environment
     for (int i = 0; i < horizontalTiles; i++) {
         for (int j = 0; j < verticalTiles; j++) {
             sf::RectangleShape tile;
             tile.setSize(sf::Vector2f(tileSize, tileSize));
             tile.setPosition(i * tileSize, j * tileSize);
-            if (j == 0 || j == verticalTiles - 1 || i == 0 || i == horizontalTiles - 1) {
+            tile.setFillColor(sf::Color(0, 128, 128));
+            //Set up four bounding walls.
+            if (j == topWall || j == bottomWall || i == leftWall || i == rightWall) {
                 tile.setFillColor(sf::Color::Red);
             }
-            else {
-                tile.setFillColor(sf::Color(0, 128, 128));
+            //Set up midleft and midright wall.
+            if (i == midLeftWall || i == midRightWall) {
+                //Leave space for doorway on mid level.
+                if (!(j == midTopWall + 4 || j == midTopWall + 5)) {
+                    //Leave some space for doorway on top level
+                    if (!(j == topWall + 4)) {
+                        //Leave some space for doorway on botom level.
+                        if (!(j == bottomWall - 3 || j == bottomWall - 4 || j == bottomWall - 5)) {
+                            tile.setFillColor(sf::Color::Red);
+                        }
+                    }
+                }
             }
+            //Set up midtop and midbottom wall.
+            if (j == midTopWall || j == midBottomWall) {
+                //Leave space for doorway on left side.
+                if (!(i == leftWall + 3 || i == leftWall + 4 || i == leftWall + 5)) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            
             tile.setOutlineThickness(1.f);
             tile.setOutlineColor(sf::Color::Black);
             tiles.push_back(tile);
         }
     }
+
+
+    //Set up graph environment.
+    Graph graph;
+    std::deque<std::shared_ptr<Edge::Vertex>> fillers;
+    sf::Color red = sf::Color::Red;
+    sf::Color cyan = sf::Color(0, 128, 128);
+    //Set up vertices.
+    int count = 0;
+    for (int i = 0; i < horizontalTiles; i++) {
+        for (int j = 0; j < verticalTiles; j++) {
+            //Set up vertex.
+            if (tiles[i * verticalTiles + j].getFillColor() != red) {
+                std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex);
+                vertex->position = sf::Vector2f(i * tileSize + tileSize / 2, j * tileSize + tileSize / 2);
+                vertex->id = count++;
+                graph.vertices.push_back(vertex);
+                fillers.push_back(vertex);
+            }   
+            //Filler list for easy indexing later.
+            else {
+                std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex);
+                fillers.push_back(vertex);
+            }
+        }
+    }
+    //Set up edges
+    float straightWeight = tileSize;
+    float diagonalWeight = Pathfollowing::euclidean(sf::Vector2f(0.f, 0.f), sf::Vector2f(tileSize, tileSize));
+    for (int i = 1; i < horizontalTiles - 1; i++) {
+        for (int j = 1; j < verticalTiles - 1; j++) {
+            if (tiles[i * verticalTiles + j].getFillColor() != red) {
+                //Set up edges to surrounding viable neighbors.
+                for (int currentI = i - 1; currentI <= i + 1; currentI++) {
+
+                    for (int currentJ = j - 1; currentJ <= j + 1; currentJ++) {
+
+                        if ( !(currentI == i && currentJ == j) && tiles[currentI * verticalTiles + currentJ].getFillColor() != red) {
+                            std::shared_ptr<Edge> edge(new Edge);
+                            if (currentI != i && currentJ != j) {
+                                edge->weight = diagonalWeight;
+                            }
+                            else {
+                                edge->weight = straightWeight;
+                            }
+                            edge->start = fillers[i * verticalTiles + j];
+                            edge->end = fillers[currentI * verticalTiles + currentJ];
+                            fillers[i * verticalTiles + j]->outgoingEdges.push_back(edge);
+                            graph.edges.push_back(edge);
+                        }
+                    }
+                }
+            }   
+        }
+    }
+
+    // //Show tile centers
+    // for (int i = 0; i < graph.vertices.size(); i++) {
+    //     sf::CircleShape c;
+    //     c.setRadius(2.5);
+    //     c.setOrigin(2.5, 2.5);
+    //     c.setFillColor(sf::Color::Green);
+    //     c.setPosition(graph.vertices[i]->position);
+    //     clickCircles.push_back(c);
+    // }
+
+    //Set up steering behaviors.
+    Kinematic target;
+    target.pos = b.kinematic.pos;
+
+    Pathfollowing pathFollower;
 
     //Create a timeline with a tic size of 10, updating every 10 ms or 100 fps.
     Timeline global;
@@ -71,6 +168,8 @@ int main() {
     //CurrentTic starts higher than lastTic so the program starts immediately.
     int64_t currentTic = 0;
     int64_t lastTic = -1;
+
+    std::deque<std::shared_ptr<Edge::Vertex>> path;
 
     while (window.isOpen()) {
         //Get the current tic.
@@ -85,14 +184,35 @@ int main() {
                 }
                 if (event.mouseButton.button == sf::Mouse::Left) {
                     target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                    //Update mouse click circles.
-                    std::cout << "X: " << target.pos.x << " Y: " << target.pos.y << std::endl;
+                    int targetTileX = floor(target.pos.x / tileSize);
+                    int targetTileY = floor(target.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[targetTileX * verticalTiles + targetTileY];
+
+                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
+                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
+
+                    Pathfinding astar;
+                    path = astar.calculateAStar(graph, boidVertex, targetVertex);
+                    for (int i = 0; i < graph.vertices.size(); i++) {
+                        graph.vertices[i]->visited = false;
+                    }
+
+
                 }
             }
 
+            //Calculate current path.
+
+
             //Calculate acceleration for all boids.
             for (Boid *b : SteeringBehavior::boids) {
-                
+                if (path.size() != 0) {
+                    int goal = pathFollower.followPath(path, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), b->kinematic);
+                    Kinematic goalKinematic;
+                    goalKinematic.pos = path[goal]->position;
+                    pathFollower.calculateAcceleration(b->steering, b->kinematic, goalKinematic);
+                }
             }
             //Update all boids
             for (Boid *b : SteeringBehavior::boids) {
@@ -105,6 +225,9 @@ int main() {
             }
             for (Boid *b : SteeringBehavior::boids) {
                 b->draw();
+            }
+            for (int i = 0; i < clickCircles.size(); i++) {
+                window.draw(clickCircles[i]);
             }
             window.display();
         }
