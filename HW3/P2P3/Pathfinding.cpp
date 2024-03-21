@@ -137,7 +137,7 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph grap
     }
     //The distance to the source point is zero.
     heuristics.erase(heuristicIndices.at(source->id));
-    heuristicIndices.insert_or_assign(source->id, heuristics.insert({manhattan(source, goal), {0.f, source->id}}));
+    heuristicIndices.insert_or_assign(source->id, heuristics.insert({euclidean(source, goal), {0.f, source->id}}));
     
     int numVisited = 0;
 
@@ -186,7 +186,7 @@ std::deque<std::shared_ptr<Edge::Vertex>> Pathfinding::calculateAStar(Graph grap
                 //If it's shorter than what is written down, replace it and update prev as well.
                 if (alt < heuristicIndices.at(v->id)->second.first) {
                     heuristics.erase(heuristicIndices.at(v->id));
-                    heuristicIndices.insert_or_assign(v->id, heuristics.insert({alt + manhattan(v, goal), {alt, v->id}}));
+                    heuristicIndices.insert_or_assign(v->id, heuristics.insert({alt + euclidean(v, goal), {alt, v->id}}));
                     prev[v->id] = u;
                 }
             }
