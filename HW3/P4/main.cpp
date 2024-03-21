@@ -174,7 +174,6 @@ int main() {
 
                     valid.push_back({currentI, currentJ});
                 }
-                std::cout << valid.size() << std::endl;
                 for (int k = 0; k < valid.size(); k++) {
                     std::shared_ptr<Edge> edge(new Edge);
                     if (valid[k].first != i && valid[k].second != j) {

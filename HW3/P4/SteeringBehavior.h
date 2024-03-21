@@ -42,17 +42,17 @@ class PositionMatch : public SteeringBehavior {
         static constexpr float RSAT = 10.f;
         static constexpr float RDEC = 60.f;
         static constexpr float MAXVEL = 60.f;
-        static constexpr float TTTV = 1.f;
+        static constexpr float TTTV = .5f;
     public:
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
 };
 //Class for matching orientation (Direction we are facing).
 class OrientationMatch : public SteeringBehavior {
     private:
-        static constexpr float ANGULARDEC = 1.f;
-        static constexpr float MAXROT = .8f;
+        static constexpr float ANGULARDEC = 1.1f;
+        static constexpr float MAXROT = 1.8f;
         static constexpr float ANGULARSAT = .2f;
-        static constexpr float TTTV = 1.f;
+        static constexpr float TTTV = .3f;
     public:
 
         void calculateAcceleration(SteeringData *steering, Kinematic character, Kinematic goal) override;
