@@ -8,11 +8,6 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 
-//Notes: Center of mass = X1 + X2 + X3... / M1 + M2 + M3...
-//In our case that means that the X coordinate for the center of mass is the sum of all the X coordinates divided by the number of sprites. The average.
-//Same with the Y coordinate.
-// "Neighborhood" of a boid can just be a simple radius. Reynolds suggests making it a cone but we not doing that.
-
 int main() {
 
     srand(time(0));
@@ -82,9 +77,54 @@ int main() {
                     tile.setFillColor(sf::Color::Red);
                 }
             }
+            //Draw couch
+            if (j == bottomWall - 5) {
+                if (i == midLeftWall + 7 || i == midLeftWall + 10) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            if (j == bottomWall - 4) {
+                if (i == midLeftWall + 7 || i == midLeftWall + 8 || i == midLeftWall + 9 || i == midLeftWall + 9 || i == midLeftWall + 10) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            //Draw lift
+            if (j == midTopWall + 2 || j == midBottomWall - 2) {
+                if (i == midRightWall + 2 || i == midRightWall + 3 || i == midRightWall + 4 || i == midRightWall + 5 || i == midRightWall + 6) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            if (i == rightWall - 2) {
+                if (j == midBottomWall - 3 || j == midBottomWall - 4 || j == midBottomWall - 5 || j == midBottomWall - 6) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            if (i == midRightWall + 2) {
+                if (j == midBottomWall - 3 || j == midTopWall + 3) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+
+            //Draw stairs
+            if (j == midTopWall + 1) {
+                if (i == midLeftWall - 3) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            if (j == midTopWall + 2) {
+                if (i == midLeftWall - 4) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+            if (j == midTopWall + 3) {
+                if (i == midLeftWall - 5) {
+                    tile.setFillColor(sf::Color::Red);
+                }
+            }
+
             
-            tile.setOutlineThickness(1.f);
-            tile.setOutlineColor(sf::Color::Black);
+            // tile.setOutlineThickness(1.f);
+            // tile.setOutlineColor(sf::Color::Black);
             tiles.push_back(tile);
         }
     }
@@ -109,7 +149,7 @@ int main() {
             }   
             //Filler list for easy indexing later.
             else {
-                std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex);
+                std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex(sf::Vector2f(-1.f, -1.f)));
                 fillers.push_back(vertex);
             }
         }
@@ -230,6 +270,8 @@ int main() {
                     window.close();
                 }
                 if (event.mouseButton.button == sf::Mouse::Left) {
+                    
+
                     target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
                     int targetTileX = floor(target.pos.x / tileSize);
                     int targetTileY = floor(target.pos.y / tileSize);
@@ -238,19 +280,26 @@ int main() {
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
+                    if (targetVertex->position != sf::Vector2f(-1.f, -1.f)) {
 
-                    Pathfinding astar;
-                    path = astar.calculateAStar(graph, boidVertex, targetVertex);
-                    for (int i = 0; i < graph.vertices.size(); i++) {
-                        graph.vertices[i]->visited = false;
+                        Pathfinding astar;
+                        path = astar.calculateAStar(graph, boidVertex, targetVertex);
+                        for (int i = 0; i < graph.vertices.size(); i++) {
+                            graph.vertices[i]->visited = false;
+                        }
                     }
 
-
+                    sf::CircleShape c;
+                    c.setRadius(2.5);
+                    c.setOrigin(2.5, 2.5);
+                    c.setFillColor(sf::Color::Green);
+                    c.setPosition(target.pos);
+                    clickCircles.push_back(c);
+                    if (clickCircles.size() > 10) {
+                        clickCircles.pop_front();
+                    }
                 }
             }
-
-            //Calculate current path.
-
 
             //Calculate acceleration for all boids.
             for (Boid *b : SteeringBehavior::boids) {

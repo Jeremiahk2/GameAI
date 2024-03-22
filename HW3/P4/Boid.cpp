@@ -4,9 +4,9 @@ Crumb::Crumb(int id)
 {
     //set initial position and size breadcrumbs   
     this->id = id;         
-    this->setRadius(1.f);
+    this->setRadius(2.f);
     this->setOrigin(this->getGlobalBounds().width / 2.f, this->getGlobalBounds().height / 2.f);
-    this->setFillColor(sf::Color::Red);
+    this->setFillColor(sf::Color::White);
     this->setPosition(-100, -100);
 }
 
@@ -33,7 +33,7 @@ int Boid::numBoids = 0;
 Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
 {
     window = w;
-    drop_timer = 15.f;
+    drop_timer = 10.f;
     crumb_idx = 0;
     sprite.setTexture(tex);
     sprite.setScale(0.02f, 0.02f);
@@ -43,7 +43,7 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     steering = new SteeringData;
     kinematic.id = numBoids++;
 
-    for(int i = 0; i < 10; i++)
+    for(int i = 0; i < 125; i++)
     {
         Crumb c(i);
         breadcrumbs.push_back(c);
@@ -74,10 +74,10 @@ void Boid::draw()
     }
     else
     {
-        drop_timer = 15.f;
+        drop_timer = 10.f;
         breadcrumbs.at(crumb_idx).drop(sprite.getPosition());
 
-        if (crumb_idx < 9)
+        if (crumb_idx < 124)
             crumb_idx++;
         else
             crumb_idx = 0;
