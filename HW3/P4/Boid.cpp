@@ -43,7 +43,7 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     steering = new SteeringData;
     kinematic.id = numBoids++;
 
-    for(int i = 0; i < 125; i++)
+    for(int i = 0; i < 200; i++)
     {
         Crumb c(i);
         breadcrumbs.push_back(c);
@@ -77,7 +77,7 @@ void Boid::draw()
         drop_timer = 10.f;
         breadcrumbs.at(crumb_idx).drop(sprite.getPosition());
 
-        if (crumb_idx < 124)
+        if (crumb_idx < 199)
             crumb_idx++;
         else
             crumb_idx = 0;
