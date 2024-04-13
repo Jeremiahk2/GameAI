@@ -30,7 +30,7 @@ int main() {
     //Set up clickCircles 
     std::deque<sf::CircleShape> clickCircles;
 
-    //Set up environment
+    //Set up environment variables
     std::deque<sf::RectangleShape> tiles;
     float tileSize = b.sprite.getGlobalBounds().width;
     int horizontalTiles = winWidth / tileSize + 1;
@@ -46,7 +46,7 @@ int main() {
     int midBottomWall = verticalTiles - 9;
     int midTopWall = 8;
 
-    //Set up environment
+    //Set up visual environment
     for (int i = 0; i < horizontalTiles; i++) {
         for (int j = 0; j < verticalTiles; j++) {
             sf::RectangleShape tile;
