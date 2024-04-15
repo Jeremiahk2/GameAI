@@ -50,11 +50,33 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     }
 }
 
+Boid::Boid() {
+    drop_timer = 10.f;
+    crumb_idx = 0;
+    sprite.setScale(0.02f, 0.02f);
+    sprite.setOrigin(sf::Vector2f((sprite.getGlobalBounds().width / 2.f) / .02f, (sprite.getGlobalBounds().height / 2.f) / .02f));
+    // std::cout << sprite.getGlobalBounds().width << std::endl;
+    kinematic.pos = sf::Vector2f(200.f, 200.f);
+    steering = new SteeringData;
+    kinematic.id = numBoids++;
+
+    for(int i = 0; i < 200; i++)
+    {
+        Crumb c(i);
+        breadcrumbs.push_back(c);
+    }
+}
+
+void Boid::setTexture(sf::Texture& tex) {
+    sprite.setTexture(tex);
+}
+
+void Boid::setWindow(sf::RenderWindow *w) {
+    window = w;
+}
+
 void Boid::update(float deltaTime) {
     kinematic.update(*steering, deltaTime);
-
-    
-
     //Set rotation, then boundary corrections.
     sprite.setRotation(kinematic.orientation * (180.0 / M_PI));
     //Make the X and Y value go from X = -640 to 640, and Y go from -480.f to 480.f

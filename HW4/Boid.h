@@ -57,6 +57,12 @@ class Boid
 
         Boid(sf::RenderWindow* w, sf::Texture& tex);
 
+        Boid();
+
+        void setTexture(sf::Texture& tex);
+
+        void setWindow(sf::RenderWindow *w);
+
         void update(float deltaTime);
 
         void draw();
