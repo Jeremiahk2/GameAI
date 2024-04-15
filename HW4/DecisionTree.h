@@ -1,6 +1,10 @@
+#pragma once
 #include "GameState.h"
+#include "Pathfinding.h"
+#include "SteeringBehavior.h"
 #include <memory>
 
+//Abstract DecisionTreeNode class.
 class DecisionTreeNode {
     private:
 
@@ -8,6 +12,7 @@ class DecisionTreeNode {
     virtual std::shared_ptr<DecisionTreeNode> makeDecision() = 0;
 };
 
+//Abstract Action class.
 class Action : public DecisionTreeNode {
     private:
     public:
@@ -15,6 +20,12 @@ class Action : public DecisionTreeNode {
 };
 
 class GoCenter : public Action {
+    private:
+    public:
+    std::shared_ptr<DecisionTreeNode> makeDecision() override;
+};
+
+class WanderAction : public Action {
     private:
     public:
     std::shared_ptr<DecisionTreeNode> makeDecision() override;
