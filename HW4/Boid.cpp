@@ -32,6 +32,9 @@ int Boid::numBoids = 0;
 
 Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
 {
+    if (w == NULL) {
+        throw std::invalid_argument("Window cannot be null");
+    }
     window = w;
     drop_timer = 10.f;
     crumb_idx = 0;
@@ -53,8 +56,6 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
 Boid::Boid() {
     drop_timer = 10.f;
     crumb_idx = 0;
-    sprite.setScale(0.02f, 0.02f);
-    sprite.setOrigin(sf::Vector2f((sprite.getGlobalBounds().width / 2.f) / .02f, (sprite.getGlobalBounds().height / 2.f) / .02f));
     // std::cout << sprite.getGlobalBounds().width << std::endl;
     kinematic.pos = sf::Vector2f(200.f, 200.f);
     steering = new SteeringData;
@@ -69,9 +70,14 @@ Boid::Boid() {
 
 void Boid::setTexture(sf::Texture& tex) {
     sprite.setTexture(tex);
+    sprite.setScale(0.02f, 0.02f);
 }
 
 void Boid::setWindow(sf::RenderWindow *w) {
+    if (w == NULL) {
+        throw std::invalid_argument("Window cannot be null");
+    }
+    sprite.setOrigin(sf::Vector2f((sprite.getGlobalBounds().width / 2.f) / .02f, (sprite.getGlobalBounds().height / 2.f) / .02f));
     window = w;
 }
 

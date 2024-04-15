@@ -1,6 +1,7 @@
 #include "Timeline.h"
 #include "SteeringBehavior.h"
 #include "Pathfinding.h"
+#include "GameState.h"
 
 #include <cstdio>
 #include <deque>
@@ -25,14 +26,15 @@ int main() {
         std::cout << "Error" << std::endl;
     }
     //Set up boid
-    Boid b(&window, texture);
-    SteeringBehavior::boids.push_back(&b);
+    GameState::character.setTexture(texture);
+    GameState::character.setWindow(&window);
+    SteeringBehavior::boids.push_back(&GameState::character);
     //Set up clickCircles 
     std::deque<sf::CircleShape> clickCircles;
 
     //Set up environment variables
     std::deque<sf::RectangleShape> tiles;
-    float tileSize = b.sprite.getGlobalBounds().width;
+    float tileSize = GameState::character.sprite.getGlobalBounds().width;
     int horizontalTiles = winWidth / tileSize + 1;
     int verticalTiles = winHeight / tileSize + 1;
 
@@ -243,7 +245,7 @@ int main() {
 
     // Set up steering behaviors.
     Kinematic target;
-    target.pos = b.kinematic.pos;
+    target.pos = GameState::character.kinematic.pos;
 
     Pathfollowing pathFollower;
 
@@ -277,8 +279,8 @@ int main() {
                     int targetTileY = floor(target.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> targetVertex = fillers[targetTileX * verticalTiles + targetTileY];
 
-                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
-                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
+                    int boidTileX = floor(GameState::character.kinematic.pos.x / tileSize);
+                    int boidTileY = floor(GameState::character.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
                     if (targetVertex->position != sf::Vector2f(-1.f, -1.f)) {
 
