@@ -3,51 +3,47 @@
 #include "Pathfinding.h"
 #include "SteeringBehavior.h"
 #include <memory>
+struct GameValue {
+    enum {NUMBER, TIME, REAL, NONE} type;
+    union StateData {
+        int number;
+        int64_t time;
+        float real;
+    };
+};
 
 //Abstract DecisionTreeNode class.
 class DecisionTreeNode {
     private:
 
     public:
-    virtual std::shared_ptr<DecisionTreeNode> makeDecision() = 0;
+
+        static std::deque<std::string> actionQueue;
+        
+        virtual std::shared_ptr<DecisionTreeNode> makeDecision() = 0;
 };
 
 //Abstract Action class.
 class Action : public DecisionTreeNode {
     private:
     public:
-    // std::shared_ptr<DecisionTreeNode> makeDecision() override;
-};
-
-class GoCenter : public Action {
-    private:
-    public:
-    std::shared_ptr<DecisionTreeNode> makeDecision() override;
-};
-
-class WanderAction : public Action {
-    private:
-    public:
-    std::shared_ptr<DecisionTreeNode> makeDecision() override;
+        std::shared_ptr<DecisionTreeNode> makeDecision() override;
 };
 
 class Decision : public DecisionTreeNode {
     private:
-    public:
-    std::shared_ptr<DecisionTreeNode> trueNode;
-    std::shared_ptr<DecisionTreeNode> falseNode;
-    // void *testValue();
+        std::shared_ptr<GameValue> equivalence;
+        std::shared_ptr<GameValue> upperBound;
+        std::shared_ptr<GameValue> lowerBound;
 
-    virtual std::shared_ptr<DecisionTreeNode> getBranch() = 0;
+        std::shared_ptr<DecisionTreeNode> trueNode;
+        std::shared_ptr<DecisionTreeNode> falseNode;
 
-    virtual std::shared_ptr<DecisionTreeNode> makeDecision() = 0;
-};
+        std::shared_ptr<DecisionTreeNode> getBranch();
 
-class NearWall : public Decision {
-    private:
     public:
 
-    std::shared_ptr<DecisionTreeNode> getBranch() override;
+        Decision();
 
-    std::shared_ptr<DecisionTreeNode> makeDecision() override;
+        std::shared_ptr<DecisionTreeNode> makeDecision() override;
 };

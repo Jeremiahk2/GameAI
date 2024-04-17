@@ -1,7 +1,6 @@
 #include "Timeline.h"
 #include "SteeringBehavior.h"
 #include "Pathfinding.h"
-#include "GameState.h"
 
 #include <cstdio>
 #include <deque>
@@ -26,17 +25,16 @@ int main() {
         std::cout << "Error" << std::endl;
     }
     //Set up boid
-    GameState::character.setTexture(texture);
-    GameState::character.setWindow(&window);
-    SteeringBehavior::boids.push_back(&GameState::character);
+    Boid b(&window, texture);
+    SteeringBehavior::boids.push_back(&b);
     //Set up clickCircles 
     std::deque<sf::CircleShape> clickCircles;
 
     //Set up environment variables
     std::deque<sf::RectangleShape> tiles;
-    ameState::tileSize = GameState::character.sprite.getGlobalBounds().width;
-    int horizontalTiles = winWidth / GameState::tileSize + 1;
-    int verticalTiles = winHeight / GameState::tileSize + 1;
+    float tileSize = b.sprite.getGlobalBounds().width;
+    int horizontalTiles = winWidth / tileSize + 1;
+    int verticalTiles = winHeight / tileSize + 1;
 
 
     int leftWall = 0;
@@ -52,8 +50,8 @@ int main() {
     for (int i = 0; i < horizontalTiles; i++) {
         for (int j = 0; j < verticalTiles; j++) {
             sf::RectangleShape tile;
-            tile.setSize(sf::Vector2f(GameState::tileSize, GameState::tileSize));
-            tile.setPosition(i * GameState::tileSize, j * GameState::tileSize);
+            tile.setSize(sf::Vector2f(tileSize, tileSize));
+            tile.setPosition(i * tileSize, j * tileSize);
             tile.setFillColor(sf::Color(0, 128, 128));
             //Set up four bounding walls.
             if (j == topWall || j == bottomWall || i == leftWall || i == rightWall) {
@@ -133,6 +131,8 @@ int main() {
 
 
     //Set up graph environment.
+    Graph graph;
+    std::deque<std::shared_ptr<Edge::Vertex>> fillers;
     sf::Color red = sf::Color::Red;
     sf::Color cyan = sf::Color(0, 128, 128);
     //Set up vertices.
@@ -142,21 +142,21 @@ int main() {
             //Set up vertex.
             if (tiles[i * verticalTiles + j].getFillColor() != red) {
                 std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex);
-                vertex->position = sf::Vector2f(i * GameState::tileSize + GameState::tileSize / 2, j * GameState::tileSize + GameState::tileSize / 2);
+                vertex->position = sf::Vector2f(i * tileSize + tileSize / 2, j * tileSize + tileSize / 2);
                 vertex->id = count++;
-                GameState::graph.vertices.push_back(vertex);
-                GameState::fillers.push_back(vertex);
+                graph.vertices.push_back(vertex);
+                fillers.push_back(vertex);
             }   
             //Filler list for easy indexing later.
             else {
                 std::shared_ptr<Edge::Vertex> vertex(new Edge::Vertex(sf::Vector2f(-1.f, -1.f)));
-                GameState::fillers.push_back(vertex);
+                fillers.push_back(vertex);
             }
         }
     }
     //Set up edges
-    float straightWeight = GameState::tileSize;
-    float diagonalWeight = Pathfollowing::euclidean(sf::Vector2f(0.f, 0.f), sf::Vector2f(GameState::tileSize, GameState::tileSize));
+    float straightWeight = tileSize;
+    float diagonalWeight = Pathfollowing::euclidean(sf::Vector2f(0.f, 0.f), sf::Vector2f(tileSize, tileSize));
     for (int i = 1; i < horizontalTiles - 1; i++) {
         for (int j = 1; j < verticalTiles - 1; j++) {
             if (tiles[i * verticalTiles + j].getFillColor() != red) {
@@ -222,28 +222,28 @@ int main() {
                     else {
                         edge->weight = straightWeight;
                     }
-                    edge->start = GameState::fillers[i * verticalTiles + j];
-                    edge->end = GameState::fillers[valid[k].first * verticalTiles + valid[k].second];
-                    GameState::fillers[i * verticalTiles + j]->outgoingEdges.push_back(edge);
-                    GameState::graph.edges.push_back(edge);
+                    edge->start = fillers[i * verticalTiles + j];
+                    edge->end = fillers[valid[k].first * verticalTiles + valid[k].second];
+                    fillers[i * verticalTiles + j]->outgoingEdges.push_back(edge);
+                    graph.edges.push_back(edge);
                 }
             }   
         }
     }
 
     // //Show tile centers
-    // for (int i = 0; i < GameState::graph.vertices.size(); i++) {
+    // for (int i = 0; i < graph.vertices.size(); i++) {
     //     sf::CircleShape c;
     //     c.setRadius(2.5);
     //     c.setOrigin(2.5, 2.5);
     //     c.setFillColor(sf::Color::Green);
-    //     c.setPosition(GameState::graph.vertices[i]->position);
+    //     c.setPosition(graph.vertices[i]->position);
     //     clickCircles.push_back(c);
     // }
 
     // Set up steering behaviors.
     Kinematic target;
-    target.pos = GameState::character.kinematic.pos;
+    target.pos = b.kinematic.pos;
 
     Pathfollowing pathFollower;
 
@@ -273,19 +273,19 @@ int main() {
                     
 
                     target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                    int targetTileX = floor(target.pos.x / GameState::tileSize);
-                    int targetTileY = floor(target.pos.y / GameState::tileSize);
-                    std::shared_ptr<Edge::Vertex> targetVertex = GameState::fillers[targetTileX * verticalTiles + targetTileY];
+                    int targetTileX = floor(target.pos.x / tileSize);
+                    int targetTileY = floor(target.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[targetTileX * verticalTiles + targetTileY];
 
-                    int boidTileX = floor(GameState::character.kinematic.pos.x / GameState::tileSize);
-                    int boidTileY = floor(GameState::character.kinematic.pos.y / GameState::tileSize);
-                    std::shared_ptr<Edge::Vertex> boidVertex = GameState::fillers[boidTileX * verticalTiles + boidTileY];
+                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
+                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
                     if (targetVertex->position != sf::Vector2f(-1.f, -1.f)) {
 
                         Pathfinding astar;
-                        path = astar.calculateAStar(GameState::graph, boidVertex, targetVertex);
-                        for (int i = 0; i < GameState::graph.vertices.size(); i++) {
-                            GameState::graph.vertices[i]->visited = false;
+                        path = astar.calculateAStar(graph, boidVertex, targetVertex);
+                        for (int i = 0; i < graph.vertices.size(); i++) {
+                            graph.vertices[i]->visited = false;
                         }
                     }
 

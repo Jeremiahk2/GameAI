@@ -4,15 +4,15 @@
 #include "Pathfinding.h"
 #include "Boid.h"
 
-class GameState {
-    private:
-    public:
+// class GameState {
+//     private:
+//     public:
 
-    //Knowledge: Immutable after game has started.
-    static Graph graph;
-    static std::deque<std::shared_ptr<Edge::Vertex>> fillers;
-    static int tileSize;
-    //State. Things that change throughout the game.
-    static Boid character;
-    static int64_t delta;
-};
+//     //Knowledge: Immutable after game has started.
+//     static Graph graph;
+//     static std::deque<std::shared_ptr<Edge::Vertex>> fillers;
+//     static int tileSize;
+//     //State. Things that change throughout the game.
+//     static Boid character;
+//     static int64_t delta;
+// };
