@@ -9,7 +9,9 @@ struct GameValue {
         int number;
         int64_t time;
         float real;
-    };
+    } data;
+
+    static int compare(GameValue first, GameValue second);
 };
 
 //Abstract DecisionTreeNode class.
@@ -19,7 +21,7 @@ class DecisionTreeNode {
     public:
 
         static std::deque<std::string> actionQueue;
-        
+
         virtual std::shared_ptr<DecisionTreeNode> makeDecision() = 0;
 };
 
@@ -27,7 +29,7 @@ class DecisionTreeNode {
 class Action : public DecisionTreeNode {
     private:
     public:
-        std::shared_ptr<DecisionTreeNode> makeDecision() override;
+        virtual std::shared_ptr<DecisionTreeNode> makeDecision() override;
 };
 
 class Decision : public DecisionTreeNode {
@@ -35,6 +37,8 @@ class Decision : public DecisionTreeNode {
         std::shared_ptr<GameValue> equivalence;
         std::shared_ptr<GameValue> upperBound;
         std::shared_ptr<GameValue> lowerBound;
+
+        std::shared_ptr<GameValue> value;
 
         std::shared_ptr<DecisionTreeNode> trueNode;
         std::shared_ptr<DecisionTreeNode> falseNode;

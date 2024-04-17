@@ -1,1 +1,112 @@
 #include "DecisionTree.h"
+
+//COMMON:
+std::deque<std::string> DecisionTreeNode::actionQueue;
+
+//Return 0 if first equals second.
+//Return -1 if first less than second.
+//Return 1 if first greater than second.
+//Return -2 if no comparison can be made due to typing.
+int GameValue::compare(const GameValue first, const GameValue second) {
+    //First and second must equal, and neither can be NONE
+    if (first.type == second.type && first.type != NONE) {
+        //Integer number.
+        if (first.type == NUMBER) {
+            if (first.data.number < second.data.number) {
+                return -1;
+            }
+            else if (first.data.number > second.data.number) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
+        //Time value (int64_t)
+        else if (first.type == TIME) {
+            if (first.data.time < second.data.time) {
+                return -1;
+            }
+            else if (first.data.time > second.data.time) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
+        //Real number (float)
+        else if (first.type == REAL) {
+            if (first.data.real < second.data.real) {
+                return -1;
+            }
+            else if (first.data.real > second.data.real) {
+                return 1;
+            }
+            else {
+                return 0;
+            }
+        }
+        //None of the above, invalid.
+        else {
+            return -2;
+        }
+    }
+    //Invalid combination, invalid.
+    else {
+        return -2;
+    }
+}
+
+//ACTION NODES:
+std::shared_ptr<DecisionTreeNode> Action::makeDecision() {
+    actionQueue.push_front("Action");
+
+    return std::shared_ptr<DecisionTreeNode>(this);
+}
+
+//DECISION NODES:
+Decision::Decision() {
+    //Set up cases to no value.
+    equivalence.reset(new GameValue);
+    equivalence->type = GameValue::NONE;
+    upperBound.reset(new GameValue);
+    upperBound->type = GameValue::NONE;
+    lowerBound.reset(new GameValue);
+    lowerBound->type = GameValue::NONE;
+    value.reset(new GameValue);
+    value->type = GameValue::NONE;
+}
+
+std::shared_ptr<DecisionTreeNode> Decision::getBranch() {
+    if (value->type != GameValue::NONE) {
+        //If this is an equivalence case
+        if (equivalence->type != GameValue::NONE) {
+            return GameValue::compare(*value, *equivalence) == 0 ? trueNode : falseNode;
+        }
+        //If this is is a bounded case.
+        if (upperBound->type != GameValue::NONE && lowerBound->type != GameValue::NONE) {
+            return GameValue::compare(*value, *upperBound) == -1 && GameValue::compare(*value, *lowerBound) == 1 ? trueNode : falseNode;
+        }
+        //If this is an upper bounded case.
+        if (upperBound->type != GameValue::NONE) {
+            return GameValue::compare(*value, *upperBound) == -1 ? trueNode : falseNode;
+        }
+        //If this is a lower bounded case.
+        if (lowerBound->type != GameValue::NONE) {
+            return GameValue::compare(*value, *lowerBound) == 1 ? trueNode : falseNode;
+        }
+        else {
+            throw std::invalid_argument("No case selected");
+        }
+    }
+    else {
+        throw std::invalid_argument("Value type was NONE");
+    }
+    return std::shared_ptr<DecisionTreeNode>(this);
+}
+
+std::shared_ptr<DecisionTreeNode> Decision::makeDecision() {
+    std::shared_ptr<DecisionTreeNode> branch = getBranch();
+
+    return branch->makeDecision();
+}
