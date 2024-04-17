@@ -6,16 +6,16 @@ std::deque<std::string> DecisionTreeNode::actionQueue;
 //Return 0 if first equals second.
 //Return -1 if first less than second.
 //Return 1 if first greater than second.
-//Return -2 if no comparison can be made due to typing.
+//Return -2 if no comparison can be made due to typing, or for false.
 int GameValue::compare(const GameValue first, const GameValue second) {
     //First and second must equal, and neither can be NONE
     if (first.type == second.type && first.type != NONE) {
         //Integer number.
         if (first.type == NUMBER) {
-            if (first.data.number < second.data.number) {
+            if (*first.data.number < *second.data.number) {
                 return -1;
             }
-            else if (first.data.number > second.data.number) {
+            else if (*first.data.number > *second.data.number) {
                 return 1;
             }
             else {
@@ -24,10 +24,10 @@ int GameValue::compare(const GameValue first, const GameValue second) {
         }
         //Time value (int64_t)
         else if (first.type == TIME) {
-            if (first.data.time < second.data.time) {
+            if (*first.data.time < *second.data.time) {
                 return -1;
             }
-            else if (first.data.time > second.data.time) {
+            else if (*first.data.time > *second.data.time) {
                 return 1;
             }
             else {
@@ -36,14 +36,23 @@ int GameValue::compare(const GameValue first, const GameValue second) {
         }
         //Real number (float)
         else if (first.type == REAL) {
-            if (first.data.real < second.data.real) {
+            if (*first.data.real < *second.data.real) {
                 return -1;
             }
-            else if (first.data.real > second.data.real) {
+            else if (*first.data.real > *second.data.real) {
                 return 1;
             }
             else {
                 return 0;
+            }
+        }
+        //Boolean value (bool)
+        else if (first.type == BOOLEAN) {
+            if (*first.data.boolean == *second.data.boolean) {
+                return 0;
+            }
+            else {
+                return -2;
             }
         }
         //None of the above, invalid.
@@ -58,10 +67,14 @@ int GameValue::compare(const GameValue first, const GameValue second) {
 }
 
 //ACTION NODES:
-std::shared_ptr<DecisionTreeNode> Action::makeDecision() {
-    actionQueue.push_front("Action");
 
-    return std::shared_ptr<DecisionTreeNode>(this);
+Action::Action(std::string action) {
+    this->action = action;
+}
+
+std::shared_ptr<DecisionTreeNode> Action::makeDecision() {
+    actionQueue.push_front(action);
+    return std::shared_ptr<DecisionTreeNode>(NULL);
 }
 
 //DECISION NODES:
@@ -107,6 +120,5 @@ std::shared_ptr<DecisionTreeNode> Decision::getBranch() {
 
 std::shared_ptr<DecisionTreeNode> Decision::makeDecision() {
     std::shared_ptr<DecisionTreeNode> branch = getBranch();
-
     return branch->makeDecision();
 }

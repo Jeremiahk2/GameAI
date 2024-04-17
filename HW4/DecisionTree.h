@@ -4,11 +4,12 @@
 #include "SteeringBehavior.h"
 #include <memory>
 struct GameValue {
-    enum {NUMBER, TIME, REAL, NONE} type;
+    enum {NUMBER, TIME, REAL, BOOLEAN, NONE} type;
     union StateData {
-        int number;
-        int64_t time;
-        float real;
+        int *number;
+        int64_t *time;
+        float *real;
+        bool *boolean;
     } data;
 
     static int compare(GameValue first, GameValue second);
@@ -28,12 +29,18 @@ class DecisionTreeNode {
 //Abstract Action class.
 class Action : public DecisionTreeNode {
     private:
+        std::string action;
     public:
-        virtual std::shared_ptr<DecisionTreeNode> makeDecision() override;
+        std::shared_ptr<DecisionTreeNode> makeDecision() override;
+
+        Action(std::string action);
 };
 
 class Decision : public DecisionTreeNode {
     private:
+        std::shared_ptr<DecisionTreeNode> getBranch();
+
+    public:
         std::shared_ptr<GameValue> equivalence;
         std::shared_ptr<GameValue> upperBound;
         std::shared_ptr<GameValue> lowerBound;
@@ -42,10 +49,6 @@ class Decision : public DecisionTreeNode {
 
         std::shared_ptr<DecisionTreeNode> trueNode;
         std::shared_ptr<DecisionTreeNode> falseNode;
-
-        std::shared_ptr<DecisionTreeNode> getBranch();
-
-    public:
 
         Decision();
 

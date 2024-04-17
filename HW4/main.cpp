@@ -1,6 +1,7 @@
 #include "Timeline.h"
 #include "SteeringBehavior.h"
 #include "Pathfinding.h"
+#include "DecisionTree.h"
 
 #include <cstdio>
 #include <deque>
@@ -230,16 +231,22 @@ int main() {
             }   
         }
     }
-
-    // //Show tile centers
-    // for (int i = 0; i < graph.vertices.size(); i++) {
-    //     sf::CircleShape c;
-    //     c.setRadius(2.5);
-    //     c.setOrigin(2.5, 2.5);
-    //     c.setFillColor(sf::Color::Green);
-    //     c.setPosition(graph.vertices[i]->position);
-    //     clickCircles.push_back(c);
-    // }
+    
+    //Initialize game state variables.
+    int64_t time = 0;
+    //Initialize decision tree variables
+    int64_t maxTime = 1000;
+    //Initialize decision tree nodes.
+    Decision root;
+    root.lowerBound->type = GameValue::TIME;
+    root.lowerBound->data.time = &maxTime;
+    root.value->type = GameValue::TIME;
+    root.value->data.time = &time;
+    
+    Action *newPath = new Action("newPath");
+    Action *followPath = new Action("followPath");
+    root.trueNode.reset(newPath);
+    root.falseNode.reset(followPath);
 
     // Set up steering behaviors.
     Kinematic target;
@@ -300,6 +307,13 @@ int main() {
                     }
                 }
             }
+
+            root.makeDecision();
+            for (std::string current : DecisionTreeNode::actionQueue) {
+                std::cout << current << std::endl;
+            }
+            DecisionTreeNode::actionQueue.clear();
+            time = currentTic;
 
             //Calculate acceleration for all boids.
             for (Boid *b : SteeringBehavior::boids) {
