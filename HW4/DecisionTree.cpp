@@ -48,7 +48,7 @@ int GameValue::compare(const GameValue first, const GameValue second) {
         }
         //Boolean value (bool)
         else if (first.type == BOOLEAN) {
-            if (*first.data.boolean == *second.data.boolean) {
+            if (*first.data.boolean) {
                 return 0;
             }
             else {

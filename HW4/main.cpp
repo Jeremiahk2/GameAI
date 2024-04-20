@@ -9,6 +9,11 @@
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
 
+//The tile number for a tile in room six.
+#define ROOM_SIX 817
+//The tile number for a tile in room nine.
+#define ROOM_NINE 801
+
 int main() {
 
     srand(time(0));
@@ -232,27 +237,49 @@ int main() {
         }
     }
     
+    //Initialize decision tree test case variables
+    // int64_t maxTime = 1000;
     //Initialize game state variables.
-    int64_t time = 0;
-    //Initialize decision tree variables
-    int64_t maxTime = 1000;
-    //Initialize decision tree nodes.
-    Decision root;
-    root.lowerBound->type = GameValue::TIME;
-    root.lowerBound->data.time = &maxTime;
-    root.value->type = GameValue::TIME;
-    root.value->data.time = &time;
-    
-    Action *newPath = new Action("newPath");
-    Action *followPath = new Action("followPath");
-    root.trueNode.reset(newPath);
-    root.falseNode.reset(followPath);
+    // int64_t time = maxTime + 1;
+    bool atDestination = true;
+    bool isRoomOne = false;
+    bool isRoomTwo = false;
+    //Initialize decision tree nodes
+
+    Action *changeSix = new Action("ChangeSix");
+    Action *changeNine = new Action("ChangeNine");
+    Action *changeRandom = new Action("ChangeRandom");
+    Action *followPath = new Action("FollowPath");
+
+    Decision *root = new Decision();
+    root->equivalence->type = GameValue::BOOLEAN;
+    root->value->type = GameValue::BOOLEAN;
+    root->value->data.boolean = &atDestination;
+
+    Decision *roomOneDecision = new Decision();
+    roomOneDecision->equivalence->type = GameValue::BOOLEAN;
+    roomOneDecision->value->type = GameValue::BOOLEAN;
+    roomOneDecision->value->data.boolean = &isRoomOne;
+
+    Decision *roomTwoDecision = new Decision();
+    roomTwoDecision->equivalence->type = GameValue::BOOLEAN;
+    roomTwoDecision->value->type = GameValue::BOOLEAN;
+    roomTwoDecision->value->data.boolean = &isRoomTwo;
+
+    root->trueNode.reset(roomOneDecision);
+    root->falseNode.reset(followPath);
+    roomOneDecision->trueNode.reset(changeSix);
+    roomOneDecision->falseNode.reset(roomTwoDecision);
+    roomTwoDecision->trueNode.reset(changeNine);
+    roomTwoDecision->falseNode.reset(changeRandom);
+
 
     // Set up steering behaviors.
     Kinematic target;
     target.pos = b.kinematic.pos;
 
     Pathfollowing pathFollower;
+    std::deque<std::shared_ptr<Edge::Vertex>> path;
 
     //Create a timeline with a tic size of 10, updating every 10 ms or 100 fps.
     Timeline global;
@@ -262,8 +289,6 @@ int main() {
     //CurrentTic starts higher than lastTic so the program starts immediately.
     int64_t currentTic = 0;
     int64_t lastTic = -1;
-
-    std::deque<std::shared_ptr<Edge::Vertex>> path;
 
     while (window.isOpen()) {
         //Get the current tic.
@@ -277,24 +302,11 @@ int main() {
                     window.close();
                 }
                 if (event.mouseButton.button == sf::Mouse::Left) {
-                    
-
                     target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
                     int targetTileX = floor(target.pos.x / tileSize);
                     int targetTileY = floor(target.pos.y / tileSize);
-                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[targetTileX * verticalTiles + targetTileY];
-
-                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
-                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
-                    std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
-                    if (targetVertex->position != sf::Vector2f(-1.f, -1.f)) {
-
-                        Pathfinding astar;
-                        path = astar.calculateAStar(graph, boidVertex, targetVertex);
-                        for (int i = 0; i < graph.vertices.size(); i++) {
-                            graph.vertices[i]->visited = false;
-                        }
-                    }
+                    std::cout << "Target Tile X: " << targetTileX << std::endl;
+                    std::cout << "Target Tile Y: " << targetTileY << std::endl;
 
                     sf::CircleShape c;
                     c.setRadius(2.5);
@@ -307,23 +319,76 @@ int main() {
                     }
                 }
             }
+            //Update state variables.
+            int targetTileX = floor(b.kinematic.pos.x / tileSize);
+            int targetTileY = floor(b.kinematic.pos.y / tileSize);
+            atDestination = path.size() == 0 || fillers[targetTileX * verticalTiles + targetTileY]->position == path[path.size() - 1]->position ? true : false;
+            isRoomOne = (targetTileX >= 1 && targetTileX <= 7) && (targetTileY >= 1 && targetTileY <= 7) ? true : false;
+            isRoomTwo = (targetTileX >= 9 && targetTileX <= 25) && (targetTileY >= 1 && targetTileY <= 7) ? true : false;
 
-            root.makeDecision();
+
+            //Run character decision tree.
+            root->makeDecision();
+            //Handle actions in the queue.
             for (std::string current : DecisionTreeNode::actionQueue) {
-                std::cout << current << std::endl;
-            }
-            DecisionTreeNode::actionQueue.clear();
-            time = currentTic;
-
-            //Calculate acceleration for all boids.
-            for (Boid *b : SteeringBehavior::boids) {
-                if (path.size() != 0) {
-                    int goal = pathFollower.followPath(path, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), b->kinematic);
-                    Kinematic goalKinematic;
-                    goalKinematic.pos = path[goal]->position;
-                    pathFollower.calculateAcceleration(b->steering, b->kinematic, goalKinematic);
+                if (current == "ChangeRandom") {
+                    std::cout << "ChangeRandom" << std::endl;
+                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
+                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = graph.vertices[rand() % graph.vertices.size()];
+                    //Find the new path to the target.
+                    Pathfinding astar;
+                    path = astar.calculateAStar(graph, boidVertex, targetVertex);
+                    for (int i = 0; i < graph.vertices.size(); i++) {
+                        graph.vertices[i]->visited = false;
+                    }
+                }
+                else if (current == "FollowPath") {
+                    // std::cout << "FollowPath" << std::endl;
+                    //Calculate acceleration for all boids.
+                    for (Boid *b : SteeringBehavior::boids) {
+                        if (path.size() != 0) {
+                            int goal = pathFollower.followPath(path, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), b->kinematic);
+                            Kinematic goalKinematic;
+                            goalKinematic.pos = path[goal]->position;
+                            pathFollower.calculateAcceleration(b->steering, b->kinematic, goalKinematic);
+                        }
+                    }
+                }
+                else if (current == "ChangeSix") {
+                    std::cout << "ChangeSix" << std::endl;
+                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
+                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_SIX];
+                    //Find the new path to the target.
+                    Pathfinding astar;
+                    path = astar.calculateAStar(graph, boidVertex, targetVertex);
+                    for (int i = 0; i < graph.vertices.size(); i++) {
+                        graph.vertices[i]->visited = false;
+                    }
+                }
+                else if (current == "ChangeNine") {
+                    std::cout << "ChangeNine" << std::endl;
+                    int boidTileX = floor(b.kinematic.pos.x / tileSize);
+                    int boidTileY = floor(b.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_NINE];
+                    //Find the new path to the target.
+                    Pathfinding astar;
+                    path = astar.calculateAStar(graph, boidVertex, targetVertex);
+                    for (int i = 0; i < graph.vertices.size(); i++) {
+                        graph.vertices[i]->visited = false;
+                    }
                 }
             }
+            //Clear the action queue.
+            DecisionTreeNode::actionQueue.clear();
+
             //Update all boids
             for (Boid *b : SteeringBehavior::boids) {
                 b->update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
