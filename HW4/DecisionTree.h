@@ -1,19 +1,8 @@
 #pragma once
-#include "GameState.h"
+#include "GameValue.h"
 #include "Pathfinding.h"
 #include "SteeringBehavior.h"
 #include <memory>
-struct GameValue {
-    enum {NUMBER, TIME, REAL, BOOLEAN, NONE} type;
-    union StateData {
-        int *number;
-        int64_t *time;
-        float *real;
-        bool *boolean;
-    } data;
-
-    static int compare(GameValue first, GameValue second);
-};
 
 //Abstract DecisionTreeNode class.
 class DecisionTreeNode {
