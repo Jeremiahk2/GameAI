@@ -19,7 +19,7 @@
 //The tile number for a tile in room nine.
 #define ROOM_NINE 801
 
-#define AGGRO_RANGE 15
+#define AGGRO_RANGE 10
 
 int main() {
 
@@ -460,7 +460,10 @@ int main() {
                 if (current->first == "goPlayer") {
                     std::cout << "GoPlayer" << std::endl;
                     //Calculate acceleration for monster boid.
-                    if (pathToPlayer.size() != 0) {
+                    if (pathToPlayer.size() > AGGRO_RANGE) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
+                    }
+                    else if (pathToPlayer.size() != 0) {
                         int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                         Kinematic goalKinematic;
                         goalKinematic.pos = pathToPlayer[goal]->position;

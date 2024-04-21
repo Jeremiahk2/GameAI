@@ -72,9 +72,10 @@ class Boid
         sf::Vector2f getPosition();
 
         void setRotation(float rotation);
+        
+        static int numBoids;
 
     private:
-        static int numBoids;
 
         //indice variables
         int crumb_idx;

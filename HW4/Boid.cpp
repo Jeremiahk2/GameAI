@@ -6,7 +6,12 @@ Crumb::Crumb(int id)
     this->id = id;         
     this->setRadius(2.f);
     this->setOrigin(this->getGlobalBounds().width / 2.f, this->getGlobalBounds().height / 2.f);
-    this->setFillColor(sf::Color::White);
+    if (Boid::numBoids % 2 == 0) {
+        this->setFillColor(sf::Color::Magenta);
+    }
+    else {
+        this->setFillColor(sf::Color::White);
+    }
     this->setPosition(-100, -100);
 }
 
