@@ -26,9 +26,13 @@ class Selector : public BehaviorTreeNode {
 
 class RandomSelector : public BehaviorTreeNode {
     private:
-        std::deque<std::shared_ptr<BehaviorTreeNode>> children;
+        std::deque<std::shared_ptr<BehaviorTreeNode>> children = std::deque<std::shared_ptr<BehaviorTreeNode>>();
+
+        std::vector<int> indices = std::vector<int>();
 
         int current = -1;
+
+        int numProcessed = 0;
     public:
         enum STATUS run() override;
 

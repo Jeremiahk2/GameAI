@@ -25,33 +25,56 @@ void Selector::addChild(std::shared_ptr<BehaviorTreeNode> child) {
 enum STATUS RandomSelector::run() {
     //If we are returning here after an action made us wait.
     if (current >= 0) {
-        enum STATUS status = children[current]->run();
-        if (status != STATUS::WAITING) {
+        enum STATUS status = children[indices[current]]->run();
+        //If waiting, just return.
+        if (status == STATUS::WAITING) {
+            return status;
+        }
+        //If successful, the selector is successful. Reset index list, current, and return.
+        else if (status == STATUS::SUCCESS) {
+            indices.clear();
+            for (int i = 0; i < children.size(); i++) {
+                indices.push_back(i);
+            }
+            current = -1;
+            return status;
+        }
+        //If failure, the selector may still succeed. Erase the failed index and keep going like normal.
+        else if (status == STATUS::FAILURE){
+            indices.erase(indices.begin() + current);
             current = -1;
         }
-        return status;
     }
     //If this is a fresh run.
-    std::vector<int> indices;
-    for (int i = 0; i < children.size(); i++) {
-        indices.push_back(i);
-    }
-    for (int i = 0; i < children.size(); i++) {
+    for (int i = children.size() - indices.size(); i < children.size(); i++) {
         int index = rand() % indices.size();
         enum STATUS status = children[indices[rand() % indices.size()]]->run();
-        indices.erase(indices.begin() + index);
         if (status == STATUS::WAITING) {
             current = index;
             return status;
         }
         if (status == STATUS::SUCCESS) {
+            indices.clear();
+            for (int i = 0; i < children.size(); i++) {
+                indices.push_back(i);
+            }
+            current = -1;
             return STATUS::SUCCESS;
         }
+        if (status == STATUS::FAILURE) {
+            indices.erase(indices.begin() + index);
+        }
     }
+    indices.clear();
+    for (int i = 0; i < children.size(); i++) {
+        indices.push_back(i);
+    }
+    current = -1;
     return STATUS::FAILURE;
 }
 
 void RandomSelector::addChild(std::shared_ptr<BehaviorTreeNode> child) {
+    indices.push_back((int)children.size());
     children.push_back(child);
 }
 
@@ -62,7 +85,7 @@ enum STATUS Sequence::run() {
             current = i;
             return status;
         }
-        if (status != STATUS::SUCCESS) {
+        if (status  == STATUS::FAILURE) {
             current = 0;
             return STATUS::FAILURE;
         }

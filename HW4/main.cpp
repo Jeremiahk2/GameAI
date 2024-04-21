@@ -19,6 +19,8 @@
 //The tile number for a tile in room nine.
 #define ROOM_NINE 801
 
+#define AGGRO_RANGE 15
+
 int main() {
 
     srand(time(0));
@@ -285,12 +287,12 @@ int main() {
     bool isMonsterRoomThree = false;
     bool isMonsterRoomOne = false;
     //Initialize any test case variables for the behavior tree.
-    int minDistToPlayer = 5;
+    int minDistToPlayer = AGGRO_RANGE;
     //Initialize behavior tree nodes.
     ActionTask *goPlayer = new ActionTask("goPlayer");
     ActionTask *killPlayer = new ActionTask("killPlayer");
-    ActionTask *goThree = new ActionTask("goThree");
-    ActionTask *goOne = new ActionTask("goOne");
+    std::shared_ptr<ActionTask> goThree(new ActionTask("goThree"));
+    std::shared_ptr<ActionTask> goOne(new ActionTask("goOne"));
 
     Condition *nearPlayerCondition = new Condition();
     nearPlayerCondition->upperBound->type = GameValue::NUMBER;
@@ -312,18 +314,19 @@ int main() {
     nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(killPlayer));
     Sequence *roomOneSequence = new Sequence();
     roomOneSequence->addChild(std::shared_ptr<BehaviorTreeNode>(roomOneCondition));
-    roomOneSequence->addChild(std::shared_ptr<BehaviorTreeNode>(goThree));
+    roomOneSequence->addChild(goThree);
     Sequence *roomThreeSequence = new Sequence();
     roomThreeSequence->addChild(std::shared_ptr<BehaviorTreeNode>(roomThreeCondition));
-    roomThreeSequence->addChild(std::shared_ptr<BehaviorTreeNode>(goOne));
+    roomThreeSequence->addChild(goOne);
     RandomSelector *randomRoomSelector = new RandomSelector();
-    randomRoomSelector->addChild(std::shared_ptr<BehaviorTreeNode>(goOne));
-    randomRoomSelector->addChild(std::shared_ptr<BehaviorTreeNode>(goThree));
+    randomRoomSelector->addChild(goOne);
+    randomRoomSelector->addChild(goThree);
     Selector *rootSelector = new Selector();
     rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(nearPlayerSequence));
     rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(roomOneSequence));
     rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(roomThreeSequence));
     rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(randomRoomSelector));
+    // rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(nearPlayerSequence));
 
 
     BehaviorTree behaviorTree = BehaviorTree(std::shared_ptr<BehaviorTreeNode>(rootSelector));
@@ -466,14 +469,13 @@ int main() {
                     if (b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds())) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::SUCCESS);
                     }
-                    
                 }
                 else if (current->first == "killPlayer") {
                     std::cout << "killPlayer" << std::endl;
-                    Boid newCharacter;
-                    Boid newMonster;
-                    b = newCharacter;
-                    monster = newMonster;
+                    b.kinematic.pos = sf::Vector2f(200.f, 200.f);
+                    atDestination = true;
+                    path.clear();
+                    monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
                     BehaviorTreeNode::actionQueue.insert_or_assign("killPlayer", STATUS::SUCCESS);
                 }
                 else if (current->first == "goOne") {
@@ -498,8 +500,10 @@ int main() {
                         goalKinematic.pos = pathToOne[goal]->position;
                         pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
                     }
-
-                    if (monsterVertex == targetVertex) {
+                    if (currentDistToPlayer < minDistToPlayer) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::FAILURE);
+                    }
+                    else if (monsterVertex == targetVertex) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
                     }
                 }
@@ -525,11 +529,14 @@ int main() {
                         goalKinematic.pos = pathToThree[goal]->position;
                         pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
                     }
-                    if (monsterVertex == targetVertex) {
+                    if (currentDistToPlayer < minDistToPlayer) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::FAILURE);
+                    }
+                    else if (monsterVertex == targetVertex) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::SUCCESS);
                     }
                 }
-            }   
+            }  
             //Clear the action queue.
             DecisionTreeNode::actionQueue.clear();
 
