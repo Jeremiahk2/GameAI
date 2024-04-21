@@ -9,12 +9,26 @@ enum STATUS{SUCCESS, FAILURE, WAITING};
 class BehaviorTreeNode {
     private:
     public:
+        static std::map<std::string, enum STATUS> actionQueue;
         virtual enum STATUS run() = 0;
 };
 
 class Selector : public BehaviorTreeNode {
     private:
         std::deque<std::shared_ptr<BehaviorTreeNode>> children;
+
+        int current = 0;
+    public:
+        enum STATUS run() override;
+
+        void addChild(std::shared_ptr<BehaviorTreeNode> child);
+};
+
+class RandomSelector : public BehaviorTreeNode {
+    private:
+        std::deque<std::shared_ptr<BehaviorTreeNode>> children;
+
+        int current = -1;
     public:
         enum STATUS run() override;
 
@@ -24,6 +38,8 @@ class Selector : public BehaviorTreeNode {
 class Sequence : public BehaviorTreeNode {
     private:
         std::deque<std::shared_ptr<BehaviorTreeNode>> children;
+
+        int current = 0;
     public:
         enum STATUS run() override;
 
