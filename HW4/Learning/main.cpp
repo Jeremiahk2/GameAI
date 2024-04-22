@@ -184,7 +184,7 @@ int main() {
 
     std::vector<Example> examples;
 
-    std::ifstream infile("input.txt");
+    std::ifstream infile("input-2.txt");
     std::string lineString;
     infile >> lineString;
     infile >> lineString;
@@ -676,13 +676,6 @@ int main() {
                     for (int i = 0; i < graph.vertices.size(); i++) {
                         graph.vertices[i]->visited = false;
                     }
-                    if (farFromSpawn) {
-                        toPlayer = false;
-                    }
-                    //Calculate acceleration for monster boid.
-                    else if (pathToPlayer.size() > AGGRO_RANGE) {
-                        toPlayer = false;
-                    }
                     if (pathToOne.size() != 0) {
                         int goal = pathFollower.followPath(pathToOne, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                         Kinematic goalKinematic;
@@ -694,9 +687,6 @@ int main() {
                         if (monsterVertex == targetVertex) {
                             toOne = false;
                         }
-                    }
-                    if (atPlayer) {
-                        toPlayer = false;
                     }
                 }
                 else if (current == "goThree") {

@@ -40829,3 +40829,4 @@ nearPlayer,inRoomThree,inRoomOne,atPlayer,farFromSpawn,toThree,toOne,toPlayer
 0,0,0,0,0,1,0,0,goThree
 0,0,0,0,0,1,0,0,goThree
 0,0,0,0,0,1,0,0,goThree
+End
