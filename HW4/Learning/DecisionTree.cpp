@@ -57,5 +57,8 @@ std::shared_ptr<DecisionTreeNode> Decision::getBranch() {
 
 std::shared_ptr<DecisionTreeNode> Decision::makeDecision() {
     std::shared_ptr<DecisionTreeNode> branch = getBranch();
-    return branch->makeDecision();
+    if (branch != NULL) {
+        return branch->makeDecision();
+    }
+    return branch;
 }

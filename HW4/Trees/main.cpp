@@ -93,7 +93,7 @@ int main() {
             //Set up midtop and midbottom wall.
             if (j == midTopWall || j == midBottomWall) {
                 //Leave space for doorway on left side.
-                if (!(i == leftWall + 3 || i == leftWall + 4 || i == leftWall + 5 || i == leftWall + 17) ) {
+                if (!(i == leftWall + 3 || i == leftWall + 4 || i == leftWall + 5 || (j == midTopWall && i == leftWall + 17)) ) {
                     tile.setFillColor(sf::Color::Red);
                 }
             }

@@ -270,7 +270,7 @@ int main() {
             //Set up midtop and midbottom wall.
             if (j == midTopWall || j == midBottomWall) {
                 //Leave space for doorway on left side.
-                if (!(i == leftWall + 3 || i == leftWall + 4 || i == leftWall + 5)) {
+                if (!(i == leftWall + 3 || i == leftWall + 4 || i == leftWall + 5 || (j == midTopWall && i == leftWall + 17)) ) {
                     tile.setFillColor(sf::Color::Red);
                 }
             }
@@ -494,13 +494,13 @@ int main() {
     std::cout << &toOne << std::endl;
     std::cout << &toPlayer << std::endl;
 
-    std::cout << "Running" << std::endl;
+    // std::cout << "Running" << std::endl;
     makeTree(examples, attributes, &rootPointer);
-    std::cout << "Done running" << std::endl;
+    // std::cout << "Done running" << std::endl;
 
-    std::cout << (rootPointer.get() == NULL) << std::endl;
+    // std::cout << (rootPointer.get() == NULL) << std::endl;
     
-    printInOrder(rootPointer.get());
+    // printInOrder(rootPointer.get());
 
 
     // Set up steering behaviors.
@@ -574,7 +574,8 @@ int main() {
                 graph.vertices[i]->visited = false;
             }
             farFromSpawn = pathToSpawn.size() < SPAWN_DISTANCE ? false : true; //If the player is closer than SPAWN_DISTANCE, it's not too far from spawn.
-            currentDistToPlayer = pathToPlayer.size(); //Update distance from monster to player.
+            currentDistToPlayer = pathToPlayer.size();
+            nearPlayer = currentDistToPlayer < AGGRO_RANGE; //Update current distance to player
 
 
             //Run character decision tree.
@@ -633,9 +634,100 @@ int main() {
                     }
                 }
             }
-
             //Clear the action queue.
             DecisionTreeNode::actionQueue.clear();
+
+            rootPointer->makeDecision();
+
+            for (std::string current : DecisionTreeNode::actionQueue) {
+                if (current == "goPlayer") {
+                    std::cout << "goPlayer" << std::endl;
+                    if (pathToPlayer.size() != 0) {
+                        int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
+                        Kinematic goalKinematic;
+                        goalKinematic.pos = pathToPlayer[goal]->position;
+                        pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
+                        toPlayer = true;
+                        toOne = false;
+                        toThree = false;
+                    }
+                }
+                else if (current == "killPlayer") {
+                    std::cout << "killPlayer" << std::endl;
+                    b.kinematic.pos = sf::Vector2f(200.f, 200.f);
+                    atDestination = true;
+                    path.clear();
+                    monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
+                    toPlayer = false;
+                    toOne = false;
+                    toThree = false;
+                }
+                else if (current == "goOne") {
+                    std::cout << "goOne" << std::endl;
+                    std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
+                    int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
+                    int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_ONE];
+                    //Find the new path to the target.
+                    Pathfinding astar;
+                    pathToOne = astar.calculateAStar(graph, monsterVertex, targetVertex);
+                    for (int i = 0; i < graph.vertices.size(); i++) {
+                        graph.vertices[i]->visited = false;
+                    }
+                    if (farFromSpawn) {
+                        toPlayer = false;
+                    }
+                    //Calculate acceleration for monster boid.
+                    else if (pathToPlayer.size() > AGGRO_RANGE) {
+                        toPlayer = false;
+                    }
+                    if (pathToOne.size() != 0) {
+                        int goal = pathFollower.followPath(pathToOne, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
+                        Kinematic goalKinematic;
+                        goalKinematic.pos = pathToOne[goal]->position;
+                        pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
+                        toOne = true;
+                        toThree = false;
+                        toPlayer = false;
+                        if (monsterVertex == targetVertex) {
+                            toOne = false;
+                        }
+                    }
+                    if (atPlayer) {
+                        toPlayer = false;
+                    }
+                }
+                else if (current == "goThree") {
+                    std::cout << "goThree" << std::endl;
+                    std::deque<std::shared_ptr<Edge::Vertex>> pathToThree;
+                    int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
+                    int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_THREE];
+                    //Find the new path to the target.
+                    Pathfinding astar;
+                    pathToThree = astar.calculateAStar(graph, monsterVertex, targetVertex);
+                    for (int i = 0; i < graph.vertices.size(); i++) {
+                        graph.vertices[i]->visited = false;
+                    }
+
+                    if (pathToThree.size() != 0) {
+                        int goal = pathFollower.followPath(pathToThree, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
+                        Kinematic goalKinematic;
+                        goalKinematic.pos = pathToThree[goal]->position;
+                        pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
+                        toThree = true;
+                        toOne = false;
+                        toPlayer = false;
+                        if (targetVertex == monsterVertex) {
+                            toThree = false;
+                        }
+                    }
+                }
+            }  
 
             //Update all boids
             for (Boid *b : SteeringBehavior::boids) {
