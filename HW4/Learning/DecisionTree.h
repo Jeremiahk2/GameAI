@@ -9,6 +9,7 @@ class DecisionTreeNode {
     private:
 
     public:
+        std::string name;
 
         static std::deque<std::string> actionQueue;
 

@@ -27,9 +27,38 @@
 //The range at which the monster will stop tracking the player.
 #define SPAWN_DISTANCE 20
 
-#define NUM_PARAMS 5
+#define NUM_PARAMS 8
 
-float entropy(std::vector<std::vector<bool>> examples, std::vector<std::string> actions) {
+struct Example {
+    std::vector<bool> attributes;
+    std::string action;
+};
+std::string conditions[] = {"nearPlayer", "inRoomThree", "inRoomOne", "atPlayer", "farFromSpawn", "toThree", "toOne", "toPlayer"};
+
+void printInOrder(DecisionTreeNode *node) {
+    if (node == NULL) {
+        return;
+    }
+    bool isDecision = false;
+    for (int i = 0; i < NUM_PARAMS; i++) {
+        if (conditions[i] == node->name) {
+            isDecision = true;
+        }
+    }
+    if (isDecision) {
+        Decision *newNode = (Decision *)node;
+        std::cout << "Decision " << newNode->name << " False Node: " << std::endl;
+        printInOrder(newNode->falseNode.get());
+
+        std::cout << "Decision " << newNode->name << " True Node: " << std::endl;
+        printInOrder(newNode->trueNode.get());
+    }
+    else {
+        std::cout << "Action " << node->name << std::endl;
+    }
+}
+
+float entropy(std::vector<Example> examples) {
     int exampleCount = examples.size();
 
     if (exampleCount <= 1) {
@@ -37,16 +66,16 @@ float entropy(std::vector<std::vector<bool>> examples, std::vector<std::string> 
     }
     std::map<std::string, int> actionTallies;
     //Increment tallies.
-    for (int i = 0; i < actions.size(); i++) {
-        if (actionTallies.find(actions[i]) != actionTallies.end()) {
-            actionTallies.insert_or_assign(actions[i], actionTallies[actions[i]] + 1);
+    for (int i = 0; i < examples.size(); i++) {
+        if (actionTallies.find(examples[i].action) != actionTallies.end()) {
+            actionTallies.insert_or_assign(examples[i].action, actionTallies[examples[i].action] + 1);
         }
         else {
-            actionTallies.insert({actions[i], 1});
+            actionTallies.insert({examples[i].action, 1});
         }
     }
     int actionCount = actionTallies.size();
-
+    //Add action here?
     if (actionCount <= 1) {
         return 0.f;
     }
@@ -54,90 +83,128 @@ float entropy(std::vector<std::vector<bool>> examples, std::vector<std::string> 
     float entropy = 0.f;
 
     for (auto current = actionTallies.begin(); current != actionTallies.end(); ++current) {
-        float proportion = current->second / exampleCount;
+        float proportion = (float)current->second / (float)exampleCount;
         entropy -= proportion * log2f(proportion);
     }
     return entropy;
 }
 
 //Return a list of sets sorted by the attribute. Each set will contain 2 lists, one where all examples have this attribute as FALSE and another with TRUE.
-std::map<bool, std::vector<std::vector<bool>>> splitByAttribute(std::vector<std::vector<bool>> examples, int attribute) {
-    std::map<bool, std::vector<std::vector<bool>>> sets;
-    
+std::map<bool, std::vector<Example>> splitByAttribute(std::vector<Example> examples, int attribute) {
+    std::map<bool, std::vector<Example>> sets;
+    //Go through each example and sort them into the sets based on their attribute value (true/false).
     for (int i = 0; i < examples.size(); i++) {
-        if (sets.find(examples.at(i).at(attribute)) != sets.end()) {
-            sets[examples.at(i).at(attribute)].push_back(examples.at(i));
+        if (sets.find(examples.at(i).attributes.at(attribute)) != sets.end()) {
+            sets[examples.at(i).attributes.at(attribute)].push_back(examples.at(i));
         }
         else {
-            sets.insert({examples.at(i).at(attribute), std::vector<std::vector<bool>>()});
-            sets[examples.at(i).at(attribute)].push_back(examples.at(i));
+            sets.insert({examples.at(i).attributes.at(attribute), std::vector<Example>()});
+            sets[examples.at(i).attributes.at(attribute)].push_back(examples.at(i));
         }
     }
     return sets;
 }
 
-float entropyOfSets(std::map<bool, std::vector<std::vector<bool>>> sets, std::vector<std::string> actions, int exampleCount) {
+float entropyOfSets(std::map<bool, std::vector<Example>> sets, int exampleCount) {
     float rtnEntropy = 0.f;
-
+    //MATH
     for (auto current = sets.begin(); current != sets.end(); ++current) {
-        float proportion = current->second.size() / exampleCount;
-        rtnEntropy -= proportion * entropy(current->second, actions);
+        float proportion = (float)current->second.size() / (float)exampleCount;
+        rtnEntropy -= proportion * entropy(current->second);
     }
     return rtnEntropy;
 }
 
-void makeTree(std::vector<std::vector<bool>> examples, const std::map<int, bool *> attributes, std::shared_ptr<Decision> node, std::vector<std::string> actions) {
+void makeTree(std::vector<Example> examples, const std::map<int, bool *> attributes, std::shared_ptr<DecisionTreeNode> *node) {
     //Find the initial entropy of all of the examples. In other words, find the amount of information that can be gained.
-    float initialEntropy = entropy(examples, actions);
+    float initialEntropy = entropy(examples);
     //If there's no more information to be gained, exit.
     if (initialEntropy <= 0) {
+        node->reset(new Action(examples[0].action));
+        (*node)->name = examples[0].action;
+        return;
+    }
+    if (attributes.size() == 0) {
+        node->reset(new Action(examples[0].action));
+        (*node)->name = examples[0].action;
         return;
     }
 
     int exampleCount = examples.size();
-    int bestInformationGain = 0;
+    //Set up best information.
+    float bestInformationGain = 0.f;
     int bestSplitAttribute;
-    std::map<bool, std::vector<std::vector<bool>>> bestSets;
+    std::map<bool, std::vector<Example>> bestSets;
 
-    for (int i = 0; i < NUM_PARAMS; i++) {
-        //Perform the split
-        std::map<bool, std::vector<std::vector<bool>>> sets = splitByAttribute(examples, i);
+    //Loop through each attribute
+    for (auto current = attributes.begin(); current != attributes.end(); ++current) {
+        //Perform the split. Returns two sets, one set has only examples with "true" for this attribute, and other with false.
+        std::map<bool, std::vector<Example>> sets = splitByAttribute(examples, current->first);
         //Find overall entropy and information gain.
-        float overallEntropy = entropyOfSets(sets, actions, exampleCount);
+        float overallEntropy = entropyOfSets(sets, exampleCount);
         float informationGain = initialEntropy - overallEntropy;
 
         //Check if we've got the best so far.
         if (informationGain > bestInformationGain) {
             bestInformationGain = informationGain;
-            bestSplitAttribute = i;
+            bestSplitAttribute = current->first;
             bestSets = sets;
         }
     }
-    node->equivalence->type = GameValue::BOOLEAN;
-    node->value->type = GameValue::BOOLEAN;
-    node->value->data.boolean = attributes.at(bestSplitAttribute);
+    node->reset(new Decision());
+    (*node)->name = conditions[bestSplitAttribute];
+    Decision *decisionNode = (Decision *)node->get();
+    //set up the node with the best attribute.
+    decisionNode->equivalence->type = GameValue::BOOLEAN;
+    decisionNode->value->type = GameValue::BOOLEAN;
+    decisionNode->value->data.boolean = attributes.at(bestSplitAttribute);
 
     std::map<int, bool *> newAttributes = attributes;
+    //Erase the attribute we've just used.
     newAttributes.erase(bestSplitAttribute);
+    //Go through the best sets (the true-false for the best attribute).
     for (auto current = bestSets.begin(); current != bestSets.end(); ++current) {
+        //The current attribute value, true or false.
         bool attributeValue = current->first;
-
-        std::shared_ptr<Decision> daughter = std::shared_ptr<Decision>(new Decision());
-
+        //If the current attribute is true, this daughter is the true
         if (attributeValue) {
-            node->trueNode = daughter;
+            makeTree(current->second, newAttributes, &decisionNode->trueNode);
         }
         else {
-            node->falseNode = daughter;
+            makeTree(current->second, newAttributes, &decisionNode->falseNode);
         }
-
-        makeTree(current->second, newAttributes, daughter, actions);
+        //Make that daughter node. Each daughter node will now have a unique set attached to them.
+        //But the attribute list will be the same, now with the bestSplitAttribute removed.
     }
 }
 
 int main() {
 
     srand(time(0));
+
+    std::vector<Example> examples;
+
+    std::ifstream infile("input.txt");
+    std::string lineString;
+    infile >> lineString;
+    infile >> lineString;
+    while (lineString != std::string("End")) {
+        std::stringstream data(lineString);
+        Example currentExample;
+        for (int i = 0; i < NUM_PARAMS; i++) {
+            std::string stringValue;
+            getline(data, stringValue, ',');
+            bool value;
+            std::istringstream(stringValue) >> value;
+            currentExample.attributes.push_back(value);
+        }
+        std::string stringValue;
+        getline(data, stringValue, ',');
+        currentExample.action = stringValue;
+        examples.push_back(currentExample);
+        infile >> lineString;
+    }
+
     // Create a window with the same pixel depth as the desktop, with 144 frames per second.
     sf::RenderWindow window;
     sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
@@ -395,44 +462,46 @@ int main() {
     roomTwoDecision->falseNode.reset(changeRandom);
 
     //Initialize any extra game state variables for the behavior tree.
+    //nearPlayer,inRoomThree,inRoomOne,atPlayer,farFromSpawn,toThree,toOne,toPlayer
     int currentDistToPlayer = 6;
+    bool nearPlayer = false;
     bool isMonsterRoomThree = false;
     bool isMonsterRoomOne = false;
     bool atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds());
     bool farFromSpawn = false;
-    //Save state for waiting actions.
-    int savedVariableDist = currentDistToPlayer;
-    bool savedMonsterThree = isMonsterRoomThree;
-    bool savedMonsterOne = isMonsterRoomOne;
-    bool savedAtPlayer = atPlayer;
-    bool savedFarFromSpawn = farFromSpawn;
-    bool saved = false;
-    //Initialize any test case variables for the behavior tree.
-    int minDistToPlayer = AGGRO_RANGE;
+    bool toThree = false;
+    bool toOne = false;
+    bool toPlayer = false;
+    //Create behavior tree.
+    std::shared_ptr<DecisionTreeNode> rootPointer;
+    std::map<int, bool *> attributes;
 
-    //Begin learning the Decision tree.
-    std::vector<std::vector<bool>> examples;
-    std::vector<std::string> actions;
+    attributes.insert({0, &nearPlayer});
+    attributes.insert({1, &isMonsterRoomThree});
+    attributes.insert({2, &isMonsterRoomOne});
+    attributes.insert({3, &atPlayer});
+    attributes.insert({4, &farFromSpawn});
+    attributes.insert({5, &toThree});
+    attributes.insert({6, &toOne});
+    attributes.insert({7, &toPlayer});
 
-    std::ifstream infile("input.txt");
-    std::string lineString;
-    infile >> lineString;
-    infile >> lineString;
-    while (lineString != std::string("End")) {
-        std::stringstream data(lineString);
-        examples.push_back(std::vector<bool>());
-        for (int i = 0; i < NUM_PARAMS; i++) {
-            std::string stringValue;
-            getline(data, stringValue, ',');
-            bool value;
-            std::istringstream(stringValue) >> value;
-            examples[examples.size() - 1].push_back(value);
-        }
-        std::string stringValue;
-        getline(data, stringValue, ',');
-        actions.push_back(stringValue);
-        infile >> lineString;
-    }
+    std::cout << &nearPlayer << std::endl;
+    std::cout << &isMonsterRoomThree << std::endl;
+    std::cout << &isMonsterRoomOne << std::endl;
+    std::cout << &atPlayer << std::endl;
+    std::cout << &farFromSpawn << std::endl;
+    std::cout << &toThree << std::endl;
+    std::cout << &toOne << std::endl;
+    std::cout << &toPlayer << std::endl;
+
+    std::cout << "Running" << std::endl;
+    makeTree(examples, attributes, &rootPointer);
+    std::cout << "Done running" << std::endl;
+
+    std::cout << (rootPointer.get() == NULL) << std::endl;
+    
+    printInOrder(rootPointer.get());
+
 
     // Set up steering behaviors.
     Kinematic target;
