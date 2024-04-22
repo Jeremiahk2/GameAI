@@ -487,12 +487,14 @@ int main() {
 
                     if (farFromSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                        // toPlayer = false;
                     }
                     //Calculate acceleration for monster boid.
                     else if (pathToPlayer.size() > AGGRO_RANGE) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                        // toPlayer = false;
+                    }
+                    else if (atPlayer) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::SUCCESS);
+                        toPlayer = false;
                     }
                     else if (pathToPlayer.size() != 0) {
                         int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
@@ -502,10 +504,6 @@ int main() {
                         toPlayer = true;
                         toOne = false;
                         toThree = false;
-                    }
-                    if (atPlayer) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::SUCCESS);
-                        // toPlayer = false;
                     }
                 }
                 else if (current->first == "killPlayer") {
@@ -517,24 +515,23 @@ int main() {
                     BehaviorTreeNode::actionQueue.insert_or_assign("killPlayer", STATUS::SUCCESS);
                 }
                 else if (current->first == "goOne") {
-                    // output << "goOne" << std::endl;
+                    std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
+                    int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
+                    int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_ONE];
                     if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::FAILURE);
                     }
                     else {
-                        std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
-                        int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
-                        int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
-                        std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
-                        //Set target as the center of the screen.
-                        std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_ONE];
                         //Find the new path to the target.
                         Pathfinding astar;
                         pathToOne = astar.calculateAStar(graph, monsterVertex, targetVertex);
                         for (int i = 0; i < graph.vertices.size(); i++) {
                             graph.vertices[i]->visited = false;
                         }
-
+                        //Move success status up here for all. Don't count successes as actions.
                         if (pathToOne.size() != 0) {
                             int goal = pathFollower.followPath(pathToOne, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                             Kinematic goalKinematic;
@@ -545,23 +542,22 @@ int main() {
                             toPlayer = false;
                         }
                         if (monsterVertex == targetVertex) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
-                    }
+                            BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
+                            toOne = false;
+                        }
                     }
                 }
                 else if (current->first == "goThree") {
-                    // output << "goThree" << std::endl;
-
+                    std::deque<std::shared_ptr<Edge::Vertex>> pathToThree;
+                    int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
+                    int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
+                    std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
+                    //Set target as the center of the screen.
+                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_THREE];
                     if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::FAILURE);
                     }
                     else {
-                        std::deque<std::shared_ptr<Edge::Vertex>> pathToThree;
-                        int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
-                        int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
-                        std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
-                        //Set target as the center of the screen.
-                        std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_THREE];
                         //Find the new path to the target.
                         Pathfinding astar;
                         pathToThree = astar.calculateAStar(graph, monsterVertex, targetVertex);
@@ -577,9 +573,11 @@ int main() {
                             toThree = true;
                             toOne = false;
                             toPlayer = false;
+                            
                         }
                         if (monsterVertex == targetVertex) {
                             BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::SUCCESS);
+                            toThree = false;
                         }
                     }
                 }
