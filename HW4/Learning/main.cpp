@@ -9,7 +9,10 @@
 #include <iostream>
 #include <SFML/OpenGL.hpp>
 #include <SFML/Graphics.hpp>
+#include <iostream>
 #include <fstream>
+#include <sstream>
+#include <cmath>
 
 //The tile number for the tile in the cetner of room one.
 #define ROOM_ONE 108
@@ -23,6 +26,114 @@
 #define AGGRO_RANGE 10
 //The range at which the monster will stop tracking the player.
 #define SPAWN_DISTANCE 20
+
+#define NUM_PARAMS 5
+
+float entropy(std::vector<std::vector<bool>> examples, std::vector<std::string> actions) {
+    int exampleCount = examples.size();
+
+    if (exampleCount <= 1) {
+        return 0.f;
+    }
+    std::map<std::string, int> actionTallies;
+    //Increment tallies.
+    for (int i = 0; i < actions.size(); i++) {
+        if (actionTallies.find(actions[i]) != actionTallies.end()) {
+            actionTallies.insert_or_assign(actions[i], actionTallies[actions[i]] + 1);
+        }
+        else {
+            actionTallies.insert({actions[i], 1});
+        }
+    }
+    int actionCount = actionTallies.size();
+
+    if (actionCount <= 1) {
+        return 0.f;
+    }
+
+    float entropy = 0.f;
+
+    for (auto current = actionTallies.begin(); current != actionTallies.end(); ++current) {
+        float proportion = current->second / exampleCount;
+        entropy -= proportion * log2f(proportion);
+    }
+    return entropy;
+}
+
+//Return a list of sets sorted by the attribute. Each set will contain 2 lists, one where all examples have this attribute as FALSE and another with TRUE.
+std::map<bool, std::vector<std::vector<bool>>> splitByAttribute(std::vector<std::vector<bool>> examples, int attribute) {
+    std::map<bool, std::vector<std::vector<bool>>> sets;
+    
+    for (int i = 0; i < examples.size(); i++) {
+        if (sets.find(examples.at(i).at(attribute)) != sets.end()) {
+            sets[examples.at(i).at(attribute)].push_back(examples.at(i));
+        }
+        else {
+            sets.insert({examples.at(i).at(attribute), std::vector<std::vector<bool>>()});
+            sets[examples.at(i).at(attribute)].push_back(examples.at(i));
+        }
+    }
+    return sets;
+}
+
+float entropyOfSets(std::map<bool, std::vector<std::vector<bool>>> sets, std::vector<std::string> actions, int exampleCount) {
+    float rtnEntropy = 0.f;
+
+    for (auto current = sets.begin(); current != sets.end(); ++current) {
+        float proportion = current->second.size() / exampleCount;
+        rtnEntropy -= proportion * entropy(current->second, actions);
+    }
+    return rtnEntropy;
+}
+
+void makeTree(std::vector<std::vector<bool>> examples, const std::map<int, bool *> attributes, std::shared_ptr<Decision> node, std::vector<std::string> actions) {
+    //Find the initial entropy of all of the examples. In other words, find the amount of information that can be gained.
+    float initialEntropy = entropy(examples, actions);
+    //If there's no more information to be gained, exit.
+    if (initialEntropy <= 0) {
+        return;
+    }
+
+    int exampleCount = examples.size();
+    int bestInformationGain = 0;
+    int bestSplitAttribute;
+    std::map<bool, std::vector<std::vector<bool>>> bestSets;
+
+    for (int i = 0; i < NUM_PARAMS; i++) {
+        //Perform the split
+        std::map<bool, std::vector<std::vector<bool>>> sets = splitByAttribute(examples, i);
+        //Find overall entropy and information gain.
+        float overallEntropy = entropyOfSets(sets, actions, exampleCount);
+        float informationGain = initialEntropy - overallEntropy;
+
+        //Check if we've got the best so far.
+        if (informationGain > bestInformationGain) {
+            bestInformationGain = informationGain;
+            bestSplitAttribute = i;
+            bestSets = sets;
+        }
+    }
+    node->equivalence->type = GameValue::BOOLEAN;
+    node->value->type = GameValue::BOOLEAN;
+    node->value->data.boolean = attributes.at(bestSplitAttribute);
+
+    std::map<int, bool *> newAttributes = attributes;
+    newAttributes.erase(bestSplitAttribute);
+    for (auto current = bestSets.begin(); current != bestSets.end(); ++current) {
+        bool attributeValue = current->first;
+
+        std::shared_ptr<Decision> daughter = std::shared_ptr<Decision>(new Decision());
+
+        if (attributeValue) {
+            node->trueNode = daughter;
+        }
+        else {
+            node->falseNode = daughter;
+        }
+
+        makeTree(current->second, newAttributes, daughter, actions);
+    }
+}
 
 int main() {
 
@@ -298,51 +409,30 @@ int main() {
     bool saved = false;
     //Initialize any test case variables for the behavior tree.
     int minDistToPlayer = AGGRO_RANGE;
-    //Initialize behavior tree nodes.
-    ActionTask *goPlayer = new ActionTask("goPlayer");
-    ActionTask *killPlayer = new ActionTask("killPlayer");
-    std::shared_ptr<ActionTask> goThree(new ActionTask("goThree"));
-    std::shared_ptr<ActionTask> goOne(new ActionTask("goOne"));
-    
 
-    Condition *nearPlayerCondition = new Condition();
-    nearPlayerCondition->upperBound->type = GameValue::NUMBER;
-    nearPlayerCondition->upperBound->data.number = &minDistToPlayer;
-    nearPlayerCondition->value->type = GameValue::NUMBER;
-    nearPlayerCondition->value->data.number = &currentDistToPlayer;
-    Condition *roomOneCondition = new Condition();
-    roomOneCondition->equivalence->type = GameValue::BOOLEAN;
-    roomOneCondition->value->type = GameValue::BOOLEAN;
-    roomOneCondition->value->data.boolean = &isMonsterRoomOne;
-    Condition *roomThreeCondition = new Condition();
-    roomThreeCondition->equivalence->type = GameValue::BOOLEAN;
-    roomThreeCondition->value->type = GameValue::BOOLEAN;
-    roomThreeCondition->value->data.boolean = &isMonsterRoomThree;
-    
-    Sequence *nearPlayerSequence = new Sequence();
-    nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(nearPlayerCondition));
-    nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(goPlayer));
-    nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(killPlayer));
-    Sequence *roomOneSequence = new Sequence();
-    roomOneSequence->addChild(std::shared_ptr<BehaviorTreeNode>(roomOneCondition));
-    roomOneSequence->addChild(goThree);
-    Sequence *roomThreeSequence = new Sequence();
-    roomThreeSequence->addChild(std::shared_ptr<BehaviorTreeNode>(roomThreeCondition));
-    roomThreeSequence->addChild(goOne);
-    RandomSelector *randomRoomSelector = new RandomSelector();
-    randomRoomSelector->addChild(goOne);
-    randomRoomSelector->addChild(goThree);
-    Selector *rootSelector = new Selector();
-    rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(nearPlayerSequence));
-    rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(roomOneSequence));
-    rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(roomThreeSequence));
-    rootSelector->addChild(std::shared_ptr<BehaviorTreeNode>(randomRoomSelector));
+    //Begin learning the Decision tree.
+    std::vector<std::vector<bool>> examples;
+    std::vector<std::string> actions;
 
-    BehaviorTree behaviorTree = BehaviorTree(std::shared_ptr<BehaviorTreeNode>(rootSelector));
-
-    //Set up the output file for the behavior tree.
-    std::ofstream output ("output.txt", std::ofstream::out);
-    output << "nearPlayer,inRoomThree,inRoomOne,atPlayer" << std::endl; //Set up key line.
+    std::ifstream infile("input.txt");
+    std::string lineString;
+    infile >> lineString;
+    infile >> lineString;
+    while (lineString != std::string("End")) {
+        std::stringstream data(lineString);
+        examples.push_back(std::vector<bool>());
+        for (int i = 0; i < NUM_PARAMS; i++) {
+            std::string stringValue;
+            getline(data, stringValue, ',');
+            bool value;
+            std::istringstream(stringValue) >> value;
+            examples[examples.size() - 1].push_back(value);
+        }
+        std::string stringValue;
+        getline(data, stringValue, ',');
+        actions.push_back(stringValue);
+        infile >> lineString;
+    }
 
     // Set up steering behaviors.
     Kinematic target;
@@ -420,20 +510,6 @@ int main() {
 
             //Run character decision tree.
             root->makeDecision();
-            behaviorTree.runTree();
-            if (BehaviorTreeNode::actionQueue.size() == 1) {
-                if (BehaviorTreeNode::actionQueue.begin()->second == STATUS::WAITING && !saved) {
-                    std::cout << "Saving" << std::endl;
-                    savedMonsterOne = isMonsterRoomOne;
-                    savedMonsterThree = isMonsterRoomThree;
-                    savedVariableDist = currentDistToPlayer;
-                    savedAtPlayer = atPlayer;
-                    savedFarFromSpawn = farFromSpawn;
-                    saved = true;
-                }
-                output << (savedVariableDist < AGGRO_RANGE) << "," << savedMonsterThree << "," << savedMonsterOne << "," << savedAtPlayer << "," << farFromSpawn << "," << BehaviorTreeNode::actionQueue.begin()->first << std::endl;
-                std::cout <<  (savedVariableDist < AGGRO_RANGE) << "," << savedMonsterThree << "," << savedMonsterOne << "," << savedAtPlayer << "," << farFromSpawn << "," << BehaviorTreeNode::actionQueue.begin()->first << std::endl;
-            }
             //Handle actions in the character's queue.
             for (std::string current : DecisionTreeNode::actionQueue) {
                 if (current == "ChangeRandom") {
@@ -489,102 +565,6 @@ int main() {
                 }
             }
 
-            
-            //Handle actions in the monster's queue.
-            for (auto current = BehaviorTreeNode::actionQueue.begin(); current != BehaviorTreeNode::actionQueue.end(); ++current) {
-                if (current->first == "goPlayer") {
-                    // output << "goPlayer" << std::endl;
-                    //Calculate acceleration for monster boid.
-                    if (pathToPlayer.size() > AGGRO_RANGE) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                    }
-                    else if (pathToPlayer.size() != 0) {
-                        int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
-                        Kinematic goalKinematic;
-                        goalKinematic.pos = pathToPlayer[goal]->position;
-                        pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
-                    }
-                    if (farFromSpawn) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                    }
-                    if (atPlayer) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::SUCCESS);
-                    }
-                }
-                else if (current->first == "killPlayer") {
-                    std::cout << atPlayer << std::endl;
-                    // output << "killPlayer" << std::endl;
-                    b.kinematic.pos = sf::Vector2f(200.f, 200.f);
-                    atDestination = true;
-                    path.clear();
-                    monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
-                    BehaviorTreeNode::actionQueue.insert_or_assign("killPlayer", STATUS::SUCCESS);
-                }
-                else if (current->first == "goOne") {
-                    // output << "goOne" << std::endl;
-                    
-                    std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
-                    int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
-                    int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
-                    std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
-                    //Set target as the center of the screen.
-                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_ONE];
-                    //Find the new path to the target.
-                    Pathfinding astar;
-                    pathToOne = astar.calculateAStar(graph, monsterVertex, targetVertex);
-                    for (int i = 0; i < graph.vertices.size(); i++) {
-                        graph.vertices[i]->visited = false;
-                    }
-
-                    if (pathToOne.size() != 0) {
-                        int goal = pathFollower.followPath(pathToOne, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
-                        Kinematic goalKinematic;
-                        goalKinematic.pos = pathToOne[goal]->position;
-                        pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
-                    }
-                    if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::FAILURE);
-                    }
-                    else if (monsterVertex == targetVertex) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
-                    }
-                }
-                else if (current->first == "goThree") {
-                    // output << "goThree" << std::endl;
-
-                    std::deque<std::shared_ptr<Edge::Vertex>> pathToThree;
-                    int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
-                    int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
-                    std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
-                    //Set target as the center of the screen.
-                    std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_THREE];
-                    //Find the new path to the target.
-                    Pathfinding astar;
-                    pathToThree = astar.calculateAStar(graph, monsterVertex, targetVertex);
-                    for (int i = 0; i < graph.vertices.size(); i++) {
-                        graph.vertices[i]->visited = false;
-                    }
-
-                    if (pathToThree.size() != 0) {
-                        int goal = pathFollower.followPath(pathToThree, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
-                        Kinematic goalKinematic;
-                        goalKinematic.pos = pathToThree[goal]->position;
-                        pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
-                    }
-                    if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::FAILURE);
-                    }
-                    else if (monsterVertex == targetVertex) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::SUCCESS);
-                    }
-                }
-            }  
-            if (BehaviorTreeNode::actionQueue.size() == 1) {
-                if (BehaviorTreeNode::actionQueue.begin()->second != STATUS::WAITING) {
-                    std::cout << "UnSaving" << std::endl;
-                    saved = false;
-                }
-            }
             //Clear the action queue.
             DecisionTreeNode::actionQueue.clear();
 

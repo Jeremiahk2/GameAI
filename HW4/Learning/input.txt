@@ -3662,3 +3662,4 @@ nearPlayer,inRoomThree,inRoomOne,atPlayer
 1,0,1,0,0,goPlayer
 1,0,1,0,0,goPlayer
 1,0,1,0,0,goPlayer
+End
