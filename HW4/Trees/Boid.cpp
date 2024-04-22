@@ -1,5 +1,6 @@
 #include "Boid.h"
 #include <iostream>
+#define NUM_CRUMBS 500
 Crumb::Crumb(int id)
 {
     //set initial position and size breadcrumbs   
@@ -51,7 +52,7 @@ Boid::Boid(sf::RenderWindow* w, sf::Texture& tex)
     steering = new SteeringData;
     kinematic.id = numBoids++;
 
-    for(int i = 0; i < 200; i++)
+    for(int i = 0; i < NUM_CRUMBS; i++)
     {
         Crumb c(i);
         breadcrumbs.push_back(c);
@@ -66,7 +67,7 @@ Boid::Boid() {
     steering = new SteeringData;
     kinematic.id = numBoids++;
 
-    for(int i = 0; i < 200; i++)
+    for(int i = 0; i < NUM_CRUMBS; i++)
     {
         Crumb c(i);
         breadcrumbs.push_back(c);
@@ -110,7 +111,7 @@ void Boid::draw()
         drop_timer = 10.f;
         breadcrumbs.at(crumb_idx).drop(sprite.getPosition());
 
-        if (crumb_idx < 199)
+        if (crumb_idx < NUM_CRUMBS - 1)
             crumb_idx++;
         else
             crumb_idx = 0;
