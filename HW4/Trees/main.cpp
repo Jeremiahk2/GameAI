@@ -487,12 +487,12 @@ int main() {
 
                     if (farFromSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                        toPlayer = false;
+                        // toPlayer = false;
                     }
                     //Calculate acceleration for monster boid.
                     else if (pathToPlayer.size() > AGGRO_RANGE) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                        toPlayer = false;
+                        // toPlayer = false;
                     }
                     else if (pathToPlayer.size() != 0) {
                         int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
@@ -500,10 +500,12 @@ int main() {
                         goalKinematic.pos = pathToPlayer[goal]->position;
                         pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
                         toPlayer = true;
+                        toOne = false;
+                        toThree = false;
                     }
                     if (atPlayer) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::SUCCESS);
-                        toPlayer = false;
+                        // toPlayer = false;
                     }
                 }
                 else if (current->first == "killPlayer") {
@@ -518,7 +520,6 @@ int main() {
                     // output << "goOne" << std::endl;
                     if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::FAILURE);
-                        toOne = false;
                     }
                     else {
                         std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
@@ -540,10 +541,11 @@ int main() {
                             goalKinematic.pos = pathToOne[goal]->position;
                             pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
                             toOne = true;
+                            toThree = false;
+                            toPlayer = false;
                         }
                         if (monsterVertex == targetVertex) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
-                        toOne = false;
                     }
                     }
                 }
@@ -552,7 +554,6 @@ int main() {
 
                     if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::FAILURE);
-                        toThree = false;
                     }
                     else {
                         std::deque<std::shared_ptr<Edge::Vertex>> pathToThree;
@@ -574,10 +575,11 @@ int main() {
                             goalKinematic.pos = pathToThree[goal]->position;
                             pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
                             toThree = true;
+                            toOne = false;
+                            toPlayer = false;
                         }
                         if (monsterVertex == targetVertex) {
                             BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::SUCCESS);
-                            toThree = false;
                         }
                     }
                 }
