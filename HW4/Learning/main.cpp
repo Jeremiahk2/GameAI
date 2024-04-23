@@ -23,9 +23,9 @@
 //The tile number for a tile in room nine.
 #define ROOM_NINE 801
 //The range at which the monster detects the player.
-#define AGGRO_RANGE 10
+#define AGGRO_RANGE 15
 //The range at which the monster will stop tracking the player.
-#define SPAWN_DISTANCE 20
+#define SPAWN_DISTANCE 25
 
 #define NUM_PARAMS 8
 
@@ -184,7 +184,7 @@ int main() {
 
     std::vector<Example> examples;
 
-    std::ifstream infile("input-3.txt");
+    std::ifstream infile("input-4.txt");
     std::string lineString;
     infile >> lineString;
     infile >> lineString;
@@ -484,13 +484,9 @@ int main() {
     attributes.insert({6, &toOne});
     attributes.insert({7, &toPlayer});
 
-    // std::cout << "Running" << std::endl;
     makeTree(examples, attributes, &rootPointer);
-    // std::cout << "Done running" << std::endl;
-
-    // std::cout << (rootPointer.get() == NULL) << std::endl;
     
-    printInOrder(rootPointer.get());
+    // printInOrder(rootPointer.get());
 
 
     // Set up steering behaviors.
@@ -519,24 +515,6 @@ int main() {
             while (window.pollEvent(event)) {
                 if (event.type == sf::Event::Closed) {
                     window.close();
-                }
-                if (event.mouseButton.button == sf::Mouse::Left) {
-                    target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                    int targetTileX = floor(target.pos.x / tileSize);
-                    int targetTileY = floor(target.pos.y / tileSize);
-                    std::cout << "Target Tile X: " << targetTileX << std::endl;
-                    std::cout << "Target Tile Y: " << targetTileY << std::endl;
-                    std::cout << "Tile number: " << targetTileX * verticalTiles + targetTileY << std::endl;
-
-                    sf::CircleShape c;
-                    c.setRadius(2.5);
-                    c.setOrigin(2.5, 2.5);
-                    c.setFillColor(sf::Color::Green);
-                    c.setPosition(target.pos);
-                    clickCircles.push_back(c);
-                    if (clickCircles.size() > 10) {
-                        clickCircles.pop_front();
-                    }
                 }
             }
             //Update state variables.
@@ -572,7 +550,7 @@ int main() {
             //Handle actions in the character's queue.
             for (std::string current : DecisionTreeNode::actionQueue) {
                 if (current == "ChangeRandom") {
-                    std::cout << "ChangeRandom" << std::endl;
+                    // std::cout << "ChangeRandom" << std::endl;
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
@@ -592,10 +570,12 @@ int main() {
                         Kinematic goalKinematic;
                         goalKinematic.pos = path[goal]->position;
                         pathFollower.calculateAcceleration(b.steering, b.kinematic, goalKinematic);
+                        b.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
+                        
                     }
                 }
                 else if (current == "ChangeSix") {
-                    std::cout << "ChangeSix" << std::endl;
+                    // std::cout << "ChangeSix" << std::endl;
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
@@ -609,7 +589,7 @@ int main() {
                     }
                 }
                 else if (current == "ChangeNine") {
-                    std::cout << "ChangeNine" << std::endl;
+                    // std::cout << "ChangeNine" << std::endl;
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
@@ -626,15 +606,23 @@ int main() {
             //Clear the action queue.
             DecisionTreeNode::actionQueue.clear();
 
+            std::ostringstream rtn;
+            rtn << nearPlayer << "," << isMonsterRoomThree << "," << isMonsterRoomOne << "," << atPlayer << "," << closeToSpawn
+                << "," << toThree << "," << toOne << "," << toPlayer << std::endl;
+
             rootPointer->makeDecision();
+                std::cout << rtn.str();
 
             for (std::string current : DecisionTreeNode::actionQueue) {
+                std::cout << "Size: " << DecisionTreeNode::actionQueue.size() << std::endl;
+                std::cout << "Action: " << current << std::endl;
                 if (current == "goPlayer") {
                     if (pathToPlayer.size() != 0) {
                         int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                         Kinematic goalKinematic;
                         goalKinematic.pos = pathToPlayer[goal]->position;
                         pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
+                        monster.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
                         toPlayer = true;
                         toOne = false;
                         toThree = false;
@@ -645,6 +633,7 @@ int main() {
                     atDestination = true;
                     path.clear();
                     monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
+                    monster.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
                     toPlayer = false;
                     atPlayer = false;
                 }
@@ -667,6 +656,7 @@ int main() {
                         Kinematic goalKinematic;
                         goalKinematic.pos = pathToOne[goal]->position;
                         pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
+                        monster.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
                         toOne = true;
                         toThree = false;
                         toPlayer = false;
@@ -693,6 +683,7 @@ int main() {
                         Kinematic goalKinematic;
                         goalKinematic.pos = pathToThree[goal]->position;
                         pathFollower.calculateAcceleration(monster.steering, monster.kinematic, goalKinematic);
+                        monster.update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
                         toThree = true;
                         toOne = false;
                         toPlayer = false;
@@ -702,11 +693,7 @@ int main() {
                     }
                 }
             }  
-
-            //Update all boids
-            for (Boid *b : SteeringBehavior::boids) {
-                b->update(frameTime.getRealTicLength() * (float)(currentTic - lastTic));
-            }
+            DecisionTreeNode::actionQueue.clear();
             //Draw to window.
             window.clear(sf::Color(0, 128, 128));
             for (int i = 0; i < tiles.size(); i++) {

@@ -21,9 +21,9 @@
 //The tile number for a tile in room nine.
 #define ROOM_NINE 801
 //The range at which the monster detects the player.
-#define AGGRO_RANGE 10
+#define AGGRO_RANGE 15
 //The range at which the monster will stop tracking the player.
-#define SPAWN_DISTANCE 20
+#define SPAWN_DISTANCE 25
 
 int main() {
 
@@ -561,7 +561,6 @@ int main() {
             if (BehaviorTreeNode::actionQueue.size() == 1 && BehaviorTreeNode::actionQueue.begin()->second == STATUS::WAITING) {
                 rtn << BehaviorTreeNode::actionQueue.begin()->first << std::endl;
                 output << rtn.str();
-                std::cout << rtn.str();
             }
             // else if (BehaviorTreeNode::actionQueue.size() > 1) {
             //     std::cout << "Size too big: " << BehaviorTreeNode::actionQueue.size() << std::endl;
