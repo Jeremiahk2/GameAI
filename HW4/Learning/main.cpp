@@ -33,7 +33,7 @@ struct Example {
     std::vector<bool> attributes;
     std::string action;
 };
-std::string conditions[] = {"nearPlayer", "inRoomThree", "inRoomOne", "atPlayer", "farFromSpawn", "toThree", "toOne", "toPlayer"};
+std::string conditions[] = {"nearPlayer", "inRoomThree", "inRoomOne", "atPlayer", "closetoSpawn", "toThree", "toOne", "toPlayer"};
 
 void printInOrder(DecisionTreeNode *node) {
     if (node == NULL) {
@@ -184,7 +184,7 @@ int main() {
 
     std::vector<Example> examples;
 
-    std::ifstream infile("input-2.txt");
+    std::ifstream infile("input-3.txt");
     std::string lineString;
     infile >> lineString;
     infile >> lineString;
@@ -463,15 +463,14 @@ int main() {
 
     //Initialize any extra game state variables for the behavior tree.
     //nearPlayer,inRoomThree,inRoomOne,atPlayer,farFromSpawn,toThree,toOne,toPlayer
-    int currentDistToPlayer = 6;
-    bool nearPlayer = false;
     bool isMonsterRoomThree = false;
     bool isMonsterRoomOne = false;
     bool atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds());
-    bool farFromSpawn = false;
+    bool closeToSpawn = false;
     bool toThree = false;
     bool toOne = false;
     bool toPlayer = false;
+    bool nearPlayer = false;
     //Create behavior tree.
     std::shared_ptr<DecisionTreeNode> rootPointer;
     std::map<int, bool *> attributes;
@@ -480,19 +479,10 @@ int main() {
     attributes.insert({1, &isMonsterRoomThree});
     attributes.insert({2, &isMonsterRoomOne});
     attributes.insert({3, &atPlayer});
-    attributes.insert({4, &farFromSpawn});
+    attributes.insert({4, &closeToSpawn});
     attributes.insert({5, &toThree});
     attributes.insert({6, &toOne});
     attributes.insert({7, &toPlayer});
-
-    std::cout << &nearPlayer << std::endl;
-    std::cout << &isMonsterRoomThree << std::endl;
-    std::cout << &isMonsterRoomOne << std::endl;
-    std::cout << &atPlayer << std::endl;
-    std::cout << &farFromSpawn << std::endl;
-    std::cout << &toThree << std::endl;
-    std::cout << &toOne << std::endl;
-    std::cout << &toPlayer << std::endl;
 
     // std::cout << "Running" << std::endl;
     makeTree(examples, attributes, &rootPointer);
@@ -500,7 +490,7 @@ int main() {
 
     // std::cout << (rootPointer.get() == NULL) << std::endl;
     
-    // printInOrder(rootPointer.get());
+    printInOrder(rootPointer.get());
 
 
     // Set up steering behaviors.
@@ -554,13 +544,6 @@ int main() {
             int playerTileY = floor(b.kinematic.pos.y / tileSize);
             int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
             int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
-            atDestination = path.size() == 0 || fillers[playerTileX * verticalTiles + playerTileY]->position == path[path.size() - 1]->position ? true : false; //Update player destination status.
-            isCharRoomOne = (playerTileX >= 1 && playerTileX <= 7) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room one status for character
-            isCharRoomTwo = (playerTileX >= 9 && playerTileX <= 25) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room two status for character
-            isMonsterRoomOne = ( monsterTileX >= 1 && monsterTileX <= 7) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room two status for monster
-            isMonsterRoomThree = ( monsterTileX >= 27 && monsterTileX <= 33) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room three status monster
-            atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds()); //Update character kill condition
-
             std::deque<std::shared_ptr<Edge::Vertex>> pathToPlayer;
             std::deque<std::shared_ptr<Edge::Vertex>> pathToSpawn;
             Pathfinding astar;
@@ -573,9 +556,15 @@ int main() {
             for (int i = 0; i < graph.vertices.size(); i++) {
                 graph.vertices[i]->visited = false;
             }
-            farFromSpawn = pathToSpawn.size() < SPAWN_DISTANCE ? false : true; //If the player is closer than SPAWN_DISTANCE, it's not too far from spawn.
-            currentDistToPlayer = pathToPlayer.size();
-            nearPlayer = currentDistToPlayer < AGGRO_RANGE; //Update current distance to player
+            //End math and calculations.
+            atDestination = path.size() == 0 || fillers[playerTileX * verticalTiles + playerTileY]->position == path[path.size() - 1]->position ? true : false; //Update player destination status.
+            isCharRoomOne = (playerTileX >= 1 && playerTileX <= 7) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room one status for character
+            isCharRoomTwo = (playerTileX >= 9 && playerTileX <= 25) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room two status for character
+            isMonsterRoomOne = ( monsterTileX >= 1 && monsterTileX <= 7) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room two status for monster
+            isMonsterRoomThree = ( monsterTileX >= 27 && monsterTileX <= 33) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room three status monster
+            atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds()); //Update character kill condition
+            closeToSpawn = pathToSpawn.size() < SPAWN_DISTANCE ? true : false; //Is the player currently close to enemy spawn?
+            nearPlayer = pathToPlayer.size() < AGGRO_RANGE ? true : false; //Is the player currently near the enemy,
 
 
             //Run character decision tree.
@@ -659,8 +648,7 @@ int main() {
                     path.clear();
                     monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
                     toPlayer = false;
-                    toOne = false;
-                    toThree = false;
+                    atPlayer = false;
                 }
                 else if (current == "goOne") {
                     std::cout << "goOne" << std::endl;
@@ -676,6 +664,7 @@ int main() {
                     for (int i = 0; i < graph.vertices.size(); i++) {
                         graph.vertices[i]->visited = false;
                     }
+                    //Move success status up here for all. Don't count successes as actions.
                     if (pathToOne.size() != 0) {
                         int goal = pathFollower.followPath(pathToOne, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                         Kinematic goalKinematic;
@@ -684,9 +673,6 @@ int main() {
                         toOne = true;
                         toThree = false;
                         toPlayer = false;
-                        if (monsterVertex == targetVertex) {
-                            toOne = false;
-                        }
                     }
                 }
                 else if (current == "goThree") {
@@ -703,7 +689,6 @@ int main() {
                     for (int i = 0; i < graph.vertices.size(); i++) {
                         graph.vertices[i]->visited = false;
                     }
-
                     if (pathToThree.size() != 0) {
                         int goal = pathFollower.followPath(pathToThree, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                         Kinematic goalKinematic;
@@ -712,9 +697,6 @@ int main() {
                         toThree = true;
                         toOne = false;
                         toPlayer = false;
-                        if (targetVertex == monsterVertex) {
-                            toThree = false;
-                        }
                     }
                 }
             }  

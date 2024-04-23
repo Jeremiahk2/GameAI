@@ -370,24 +370,6 @@ int main() {
                 if (event.type == sf::Event::Closed) {
                     window.close();
                 }
-                // if (event.mouseButton.button == sf::Mouse::Left) {
-                //     // target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                //     // int targetTileX = floor(target.pos.x / tileSize);
-                //     // int targetTileY = floor(target.pos.y / tileSize);
-                //     // std::cout << "Target Tile X: " << targetTileX << std::endl;
-                //     // std::cout << "Target Tile Y: " << targetTileY << std::endl;
-                //     // std::cout << "Tile number: " << targetTileX * verticalTiles + targetTileY << std::endl;
-
-                //     sf::CircleShape c;
-                //     c.setRadius(2.5);
-                //     c.setOrigin(2.5, 2.5);
-                //     c.setFillColor(sf::Color::Green);
-                //     c.setPosition(target.pos);
-                //     clickCircles.push_back(c);
-                //     if (clickCircles.size() > 10) {
-                //         clickCircles.pop_front();
-                //     }
-                // }
             }
             //Update state variables.
             int playerTileX = floor(b.kinematic.pos.x / tileSize);
