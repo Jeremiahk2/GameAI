@@ -630,7 +630,6 @@ int main() {
 
             for (std::string current : DecisionTreeNode::actionQueue) {
                 if (current == "goPlayer") {
-                    std::cout << "goPlayer" << std::endl;
                     if (pathToPlayer.size() != 0) {
                         int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
                         Kinematic goalKinematic;
@@ -642,7 +641,6 @@ int main() {
                     }
                 }
                 else if (current == "killPlayer") {
-                    std::cout << "killPlayer" << std::endl;
                     b.kinematic.pos = sf::Vector2f(200.f, 200.f);
                     atDestination = true;
                     path.clear();
@@ -651,7 +649,6 @@ int main() {
                     atPlayer = false;
                 }
                 else if (current == "goOne") {
-                    std::cout << "goOne" << std::endl;
                     std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
                     int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
                     int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
@@ -674,9 +671,11 @@ int main() {
                         toThree = false;
                         toPlayer = false;
                     }
+                    if (monsterVertex == targetVertex) {
+                        toOne = false;
+                    }
                 }
                 else if (current == "goThree") {
-                    std::cout << "goThree" << std::endl;
                     std::deque<std::shared_ptr<Edge::Vertex>> pathToThree;
                     int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
                     int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
@@ -697,6 +696,9 @@ int main() {
                         toThree = true;
                         toOne = false;
                         toPlayer = false;
+                    }
+                    if (monsterVertex == targetVertex) {
+                        toThree = false;
                     }
                 }
             }  
