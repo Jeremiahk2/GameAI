@@ -48,7 +48,7 @@ enum STATUS RandomSelector::run() {
     //If this is a fresh run.
     for (int i = children.size() - indices.size(); i < children.size(); i++) {
         int index = rand() % indices.size();
-        enum STATUS status = children[indices[rand() % indices.size()]]->run();
+        enum STATUS status = children[indices[index]]->run();
         if (status == STATUS::WAITING) {
             current = index;
             return status;
@@ -80,6 +80,7 @@ void RandomSelector::addChild(std::shared_ptr<BehaviorTreeNode> child) {
 
 enum STATUS Sequence::run() {
     for (int i = current; i < children.size(); i++) {
+        // std::cout << i << std::endl;
         enum STATUS status = children[i]->run();
         if (status == STATUS::WAITING) {
             current = i;
@@ -106,6 +107,9 @@ enum STATUS ActionTask::run() {
     //No action has been queued, so this is the first run through. Queue the new action and wait.
     if (actionQueue.find(action) == actionQueue.end()) {
         actionQueue.insert({action, STATUS::WAITING});
+        // if (actionQueue.size() == 2) {
+        //     std::cout << "HERE" << std::endl;
+        // }
         return STATUS::WAITING;
     }
     //The action has been completed, but failed.
@@ -118,6 +122,9 @@ enum STATUS ActionTask::run() {
         actionQueue.erase(action);
         return STATUS::SUCCESS;
     }
+    // if (actionQueue.size() == 2) {
+    //     std::cout << "HERE" << std::endl;
+    // }
     //If it's waiting to finish, just return that.
     return STATUS::WAITING;
 }

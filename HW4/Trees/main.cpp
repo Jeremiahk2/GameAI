@@ -257,57 +257,57 @@ int main() {
     bool isCharRoomOne = false;
     bool isCharRoomTwo = false;
     //Initialize decision tree nodes
-    Action *changeSix = new Action("ChangeSix");
-    Action *changeNine = new Action("ChangeNine");
-    Action *changeRandom = new Action("ChangeRandom");
-    Action *followPath = new Action("FollowPath");
+    std::shared_ptr<Action>  changeSix(new Action("ChangeSix"));
+    std::shared_ptr<Action>  changeNine(new Action("ChangeNine"));
+    std::shared_ptr<Action>  changeRandom (new Action("ChangeRandom"));
+    std::shared_ptr<Action> followPath(new Action("FollowPath"));
 
-    Decision *root = new Decision();
+    std::shared_ptr<Decision> root(new Decision());
     root->equivalence->type = GameValue::BOOLEAN;
     root->value->type = GameValue::BOOLEAN;
     root->value->data.boolean = &atDestination;
 
-    Decision *roomOneDecision = new Decision();
+    std::shared_ptr<Decision> roomOneDecision(new Decision());
     roomOneDecision->equivalence->type = GameValue::BOOLEAN;
     roomOneDecision->value->type = GameValue::BOOLEAN;
     roomOneDecision->value->data.boolean = &isCharRoomOne;
 
-    Decision *roomTwoDecision = new Decision();
+    std::shared_ptr<Decision> roomTwoDecision(new Decision());
     roomTwoDecision->equivalence->type = GameValue::BOOLEAN;
     roomTwoDecision->value->type = GameValue::BOOLEAN;
     roomTwoDecision->value->data.boolean = &isCharRoomTwo;
 
-    root->trueNode.reset(roomOneDecision);
-    root->falseNode.reset(followPath);
-    roomOneDecision->trueNode.reset(changeSix);
-    roomOneDecision->falseNode.reset(roomTwoDecision);
-    roomTwoDecision->trueNode.reset(changeNine);
-    roomTwoDecision->falseNode.reset(changeRandom);
+    root->trueNode = roomOneDecision;
+    root->falseNode = followPath;
+    roomOneDecision->trueNode = changeSix;
+    roomOneDecision->falseNode = roomTwoDecision;
+    roomTwoDecision->trueNode = changeNine;
+    roomTwoDecision->falseNode = changeRandom;
 
     //Initialize any extra game state variables for the behavior tree.
-    int currentDistToPlayer = 6;
     bool isMonsterRoomThree = false;
     bool isMonsterRoomOne = false;
     bool atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds());
-    bool farFromSpawn = false;
+    bool closeToSpawn = false;
     bool toThree = false;
     bool toOne = false;
     bool toPlayer = false;
-
-    //Initialize any test case variables for the behavior tree.
-    int minDistToPlayer = AGGRO_RANGE;
+    bool nearPlayer = false;
     //Initialize behavior tree nodes.
-    ActionTask *goPlayer = new ActionTask("goPlayer");
-    ActionTask *killPlayer = new ActionTask("killPlayer");
+    std::shared_ptr<ActionTask> goPlayer(new ActionTask("goPlayer"));
+    std::shared_ptr<ActionTask> killPlayer(new ActionTask("killPlayer"));
     std::shared_ptr<ActionTask> goThree(new ActionTask("goThree"));
     std::shared_ptr<ActionTask> goOne(new ActionTask("goOne"));
     
 
     Condition *nearPlayerCondition = new Condition();
-    nearPlayerCondition->upperBound->type = GameValue::NUMBER;
-    nearPlayerCondition->upperBound->data.number = &minDistToPlayer;
-    nearPlayerCondition->value->type = GameValue::NUMBER;
-    nearPlayerCondition->value->data.number = &currentDistToPlayer;
+    nearPlayerCondition->equivalence->type = GameValue::BOOLEAN;
+    nearPlayerCondition->value->type = GameValue::BOOLEAN;
+    nearPlayerCondition->value->data.boolean = &nearPlayer;
+    Condition *closeSpawnCondition = new Condition();
+    closeSpawnCondition->equivalence->type = GameValue::BOOLEAN;
+    closeSpawnCondition->value->type = GameValue::BOOLEAN;
+    closeSpawnCondition->value->data.boolean = &closeToSpawn;
     Condition *roomOneCondition = new Condition();
     roomOneCondition->equivalence->type = GameValue::BOOLEAN;
     roomOneCondition->value->type = GameValue::BOOLEAN;
@@ -319,6 +319,7 @@ int main() {
     
     Sequence *nearPlayerSequence = new Sequence();
     nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(nearPlayerCondition));
+    nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(closeSpawnCondition));
     nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(goPlayer));
     nearPlayerSequence->addChild(std::shared_ptr<BehaviorTreeNode>(killPlayer));
     Sequence *roomOneSequence = new Sequence();
@@ -340,7 +341,7 @@ int main() {
 
     //Set up the output file for the behavior tree.
     std::ofstream output ("output.txt", std::ofstream::out);
-    output << "nearPlayer,inRoomThree,inRoomOne,atPlayer,farFromSpawn,toThree,toOne,toPlayer" << std::endl; //Set up key line.
+    output << "nearPlayer,inRoomThree,inRoomOne,atPlayer,closeToSpawn,toThree,toOne,toPlayer" << std::endl; //Set up key line.
 
     // Set up steering behaviors.
     Kinematic target;
@@ -369,37 +370,30 @@ int main() {
                 if (event.type == sf::Event::Closed) {
                     window.close();
                 }
-                if (event.mouseButton.button == sf::Mouse::Left) {
-                    target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
-                    int targetTileX = floor(target.pos.x / tileSize);
-                    int targetTileY = floor(target.pos.y / tileSize);
-                    std::cout << "Target Tile X: " << targetTileX << std::endl;
-                    std::cout << "Target Tile Y: " << targetTileY << std::endl;
-                    std::cout << "Tile number: " << targetTileX * verticalTiles + targetTileY << std::endl;
+                // if (event.mouseButton.button == sf::Mouse::Left) {
+                //     // target.pos = sf::Vector2f(event.mouseButton.x, event.mouseButton.y);
+                //     // int targetTileX = floor(target.pos.x / tileSize);
+                //     // int targetTileY = floor(target.pos.y / tileSize);
+                //     // std::cout << "Target Tile X: " << targetTileX << std::endl;
+                //     // std::cout << "Target Tile Y: " << targetTileY << std::endl;
+                //     // std::cout << "Tile number: " << targetTileX * verticalTiles + targetTileY << std::endl;
 
-                    sf::CircleShape c;
-                    c.setRadius(2.5);
-                    c.setOrigin(2.5, 2.5);
-                    c.setFillColor(sf::Color::Green);
-                    c.setPosition(target.pos);
-                    clickCircles.push_back(c);
-                    if (clickCircles.size() > 10) {
-                        clickCircles.pop_front();
-                    }
-                }
+                //     sf::CircleShape c;
+                //     c.setRadius(2.5);
+                //     c.setOrigin(2.5, 2.5);
+                //     c.setFillColor(sf::Color::Green);
+                //     c.setPosition(target.pos);
+                //     clickCircles.push_back(c);
+                //     if (clickCircles.size() > 10) {
+                //         clickCircles.pop_front();
+                //     }
+                // }
             }
             //Update state variables.
             int playerTileX = floor(b.kinematic.pos.x / tileSize);
             int playerTileY = floor(b.kinematic.pos.y / tileSize);
             int monsterTileX = floor(monster.kinematic.pos.x / tileSize);
             int monsterTileY = floor(monster.kinematic.pos.y / tileSize);
-            atDestination = path.size() == 0 || fillers[playerTileX * verticalTiles + playerTileY]->position == path[path.size() - 1]->position ? true : false; //Update player destination status.
-            isCharRoomOne = (playerTileX >= 1 && playerTileX <= 7) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room one status for character
-            isCharRoomTwo = (playerTileX >= 9 && playerTileX <= 25) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room two status for character
-            isMonsterRoomOne = ( monsterTileX >= 1 && monsterTileX <= 7) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room two status for monster
-            isMonsterRoomThree = ( monsterTileX >= 27 && monsterTileX <= 33) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room three status monster
-            atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds()); //Update character kill condition
-
             std::deque<std::shared_ptr<Edge::Vertex>> pathToPlayer;
             std::deque<std::shared_ptr<Edge::Vertex>> pathToSpawn;
             Pathfinding astar;
@@ -412,22 +406,24 @@ int main() {
             for (int i = 0; i < graph.vertices.size(); i++) {
                 graph.vertices[i]->visited = false;
             }
-            farFromSpawn = pathToSpawn.size() < SPAWN_DISTANCE ? false : true; //If the player is closer than SPAWN_DISTANCE, it's not too far from spawn.
-            currentDistToPlayer = pathToPlayer.size(); //Update distance from monster to player.
-
-
+            //End math and calculations.
+            atDestination = path.size() == 0 || fillers[playerTileX * verticalTiles + playerTileY]->position == path[path.size() - 1]->position ? true : false; //Update player destination status.
+            isCharRoomOne = (playerTileX >= 1 && playerTileX <= 7) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room one status for character
+            isCharRoomTwo = (playerTileX >= 9 && playerTileX <= 25) && (playerTileY >= 1 && playerTileY <= 7) ? true : false; //Update room two status for character
+            isMonsterRoomOne = ( monsterTileX >= 1 && monsterTileX <= 7) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room two status for monster
+            isMonsterRoomThree = ( monsterTileX >= 27 && monsterTileX <= 33) && (monsterTileY >= 1 && monsterTileY <= 7) ? true : false; //Update room three status monster
+            atPlayer = b.sprite.getGlobalBounds().intersects(monster.sprite.getGlobalBounds()); //Update character kill condition
+            closeToSpawn = pathToSpawn.size() < SPAWN_DISTANCE ? true : false; //Is the player currently close to enemy spawn?
+            nearPlayer = pathToPlayer.size() < AGGRO_RANGE ? true : false; //Is the player currently near the enemy,
             //Run character decision tree.
+            std::ostringstream rtn;
+            rtn << nearPlayer << "," << isMonsterRoomThree << "," << isMonsterRoomOne << "," << atPlayer << "," << closeToSpawn
+                << "," << toThree << "," << toOne << "," << toPlayer << ",";
             root->makeDecision();
             behaviorTree.runTree();
-            std::ostringstream rtn;
-            if (BehaviorTreeNode::actionQueue.size() == 1) {
-                rtn << (currentDistToPlayer < AGGRO_RANGE) << "," << isMonsterRoomThree << "," << isMonsterRoomOne << "," << atPlayer << "," << farFromSpawn
-                << "," << toThree << "," << toOne << "," << toPlayer << ",";
-            }
             //Handle actions in the character's queue.
             for (std::string current : DecisionTreeNode::actionQueue) {
                 if (current == "ChangeRandom") {
-                    std::cout << "ChangeRandom" << std::endl;
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
@@ -450,7 +446,6 @@ int main() {
                     }
                 }
                 else if (current == "ChangeSix") {
-                    std::cout << "ChangeSix" << std::endl;
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
@@ -464,7 +459,6 @@ int main() {
                     }
                 }
                 else if (current == "ChangeNine") {
-                    std::cout << "ChangeNine" << std::endl;
                     int boidTileX = floor(b.kinematic.pos.x / tileSize);
                     int boidTileY = floor(b.kinematic.pos.y / tileSize);
                     std::shared_ptr<Edge::Vertex> boidVertex = fillers[boidTileX * verticalTiles + boidTileY];
@@ -483,18 +477,12 @@ int main() {
             //Handle actions in the monster's queue.
             for (auto current = BehaviorTreeNode::actionQueue.begin(); current != BehaviorTreeNode::actionQueue.end(); ++current) {
                 if (current->first == "goPlayer") {
-                    // output << "goPlayer" << std::endl;
-
-                    if (farFromSpawn) {
-                        BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
-                    }
-                    //Calculate acceleration for monster boid.
-                    else if (pathToPlayer.size() > AGGRO_RANGE) {
+                    //Fail if the player got far enough away from spawn.
+                    if (!closeToSpawn || !nearPlayer) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::FAILURE);
                     }
                     else if (atPlayer) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goPlayer", STATUS::SUCCESS);
-                        toPlayer = false;
                     }
                     else if (pathToPlayer.size() != 0) {
                         int goal = pathFollower.followPath(pathToPlayer, 1, frameTime.getRealTicLength() * (float)(currentTic - lastTic), monster.kinematic);
@@ -507,12 +495,18 @@ int main() {
                     }
                 }
                 else if (current->first == "killPlayer") {
-                    // output << "killPlayer" << std::endl;
-                    b.kinematic.pos = sf::Vector2f(200.f, 200.f);
-                    atDestination = true;
-                    path.clear();
-                    monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
-                    BehaviorTreeNode::actionQueue.insert_or_assign("killPlayer", STATUS::SUCCESS);
+                    if (atPlayer) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("killPlayer", STATUS::WAITING);
+                        b.kinematic.pos = sf::Vector2f(200.f, 200.f);
+                        atDestination = true;
+                        path.clear();
+                        monster.kinematic.pos = sf::Vector2f(50.f, 50.f);
+                        toPlayer = false;
+                        atPlayer = false;
+                    }
+                    else {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("killPlayer", STATUS::SUCCESS);
+                    }
                 }
                 else if (current->first == "goOne") {
                     std::deque<std::shared_ptr<Edge::Vertex>> pathToOne;
@@ -521,8 +515,12 @@ int main() {
                     std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
                     //Set target as the center of the screen.
                     std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_ONE];
-                    if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
+                    if (nearPlayer && closeToSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::FAILURE);
+                    }
+                    else if (monsterVertex == targetVertex) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
+                        toOne = false;
                     }
                     else {
                         //Find the new path to the target.
@@ -541,10 +539,6 @@ int main() {
                             toThree = false;
                             toPlayer = false;
                         }
-                        if (monsterVertex == targetVertex) {
-                            BehaviorTreeNode::actionQueue.insert_or_assign("goOne", STATUS::SUCCESS);
-                            toOne = false;
-                        }
                     }
                 }
                 else if (current->first == "goThree") {
@@ -554,8 +548,12 @@ int main() {
                     std::shared_ptr<Edge::Vertex> monsterVertex = fillers[monsterTileX * verticalTiles + monsterTileY];
                     //Set target as the center of the screen.
                     std::shared_ptr<Edge::Vertex> targetVertex = fillers[ROOM_THREE];
-                    if (currentDistToPlayer < minDistToPlayer && !farFromSpawn) {
+                    if (nearPlayer && closeToSpawn) {
                         BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::FAILURE);
+                    }
+                    else if (monsterVertex == targetVertex) {
+                        BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::SUCCESS);
+                        toThree = false;
                     }
                     else {
                         //Find the new path to the target.
@@ -575,18 +573,27 @@ int main() {
                             toPlayer = false;
                             
                         }
-                        if (monsterVertex == targetVertex) {
-                            BehaviorTreeNode::actionQueue.insert_or_assign("goThree", STATUS::SUCCESS);
-                            toThree = false;
-                        }
                     }
                 }
             }  
-            if (BehaviorTreeNode::actionQueue.size() == 1 && BehaviorTreeNode::actionQueue.begin()->second != STATUS::FAILURE) {
+            if (BehaviorTreeNode::actionQueue.size() == 1 && BehaviorTreeNode::actionQueue.begin()->second == STATUS::WAITING) {
                 rtn << BehaviorTreeNode::actionQueue.begin()->first << std::endl;
                 output << rtn.str();
                 std::cout << rtn.str();
             }
+            // else if (BehaviorTreeNode::actionQueue.size() > 1) {
+            //     std::cout << "Size too big: " << BehaviorTreeNode::actionQueue.size() << std::endl;
+            //     output << "Size too big: " << BehaviorTreeNode::actionQueue.size() << std::endl;
+            //     for (auto current = BehaviorTreeNode::actionQueue.begin(); current != BehaviorTreeNode::actionQueue.end(); ++current) {
+            //         output << current->first << std::endl;
+            //         std::cout << current->first << std::endl;
+            //         output<< "Status: " << current->second << std::endl;
+            //     }
+                
+            // }
+            // else if (BehaviorTreeNode::actionQueue.size() == 0) {
+            //     std::cout << "No Nodes" << std::endl;
+            // }
             //Clear the action queue.
             DecisionTreeNode::actionQueue.clear();
 
@@ -612,5 +619,7 @@ int main() {
         //We've processed a tic, wait for the next one.
         lastTic = currentTic;
     }
+    output << "End" << std::endl;
+    output.close();
     return EXIT_SUCCESS;
 }

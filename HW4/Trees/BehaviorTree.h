@@ -15,10 +15,11 @@ class BehaviorTreeNode {
 
 class Selector : public BehaviorTreeNode {
     private:
-        std::deque<std::shared_ptr<BehaviorTreeNode>> children;
 
         int current = 0;
     public:
+
+        std::deque<std::shared_ptr<BehaviorTreeNode>> children = std::deque<std::shared_ptr<BehaviorTreeNode>>();
         enum STATUS run() override;
 
         void addChild(std::shared_ptr<BehaviorTreeNode> child);
@@ -41,10 +42,10 @@ class RandomSelector : public BehaviorTreeNode {
 
 class Sequence : public BehaviorTreeNode {
     private:
-        std::deque<std::shared_ptr<BehaviorTreeNode>> children;
 
         int current = 0;
     public:
+    std::deque<std::shared_ptr<BehaviorTreeNode>> children = std::deque<std::shared_ptr<BehaviorTreeNode>>();
         enum STATUS run() override;
 
         void addChild(std::shared_ptr<BehaviorTreeNode> child);
