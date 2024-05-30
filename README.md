@@ -65,6 +65,9 @@ There were other decisions for both characters such as what happens when the mon
 
 ## Learning
 
+The culmination of everything in the project.
 I implemented a learning algorithm that would take outputted observations (in a binary text file), and convert that into a tree.
 In my implementation, it takes the outputted behavior from the monster's behavior tree and converts it into a decision tree that produces near-identical behavior.
-I was genuinely shocked by how well I got it to work, as I can't tell any difference between the behavior tree implementation and the learned decision tree implementation.
+The algorithm takes data and uses various mathematical principels to construct the best decision tree it can come up with, using principles like entropy and information gain
+in order to determine the best order to add decision nodes in. More data was always an improvement. My end result ended up recording and using more than ten unique observation variables and more than
+100,000 lines of information per run. Granted, if behavior didn't have any randomness to it, a smaller sample size would be sufficient. But that would be a poor enemy AI.
