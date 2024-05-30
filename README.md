@@ -36,60 +36,34 @@ I could have made it faster had I used other algorithms, but for my purposes, th
 
 
 ## A* Algorithm
+I implemented A* in C++ the same way. I used the euclidean and manhattan heuristics. The cluster heuristic was used, but deemed inefficient
+due to the way the graph was generated.
 
 ## Generators
+I created a generator to create the large graphs that I used for testing my algorithms for speed. It generates a connected graph with hundreds of thousands of 
+vertices and several times that number of edges.
 
 ## Level Example
+![image](https://github.com/Jeremiahk2/GameAI/assets/103688789/304f154a-5ffb-4841-a856-3158f305acdb)
 
+I created this example using SFML to test pathfinding, learning algorithms, and so on. The red tiles are walls, and the cyan tiles are traversible space.
 
-CSC 484 Homework Two.
+## Localization and Quantization
 
-Instructions and notes by part:
+I used a tiling system to convert the environment into a graph. One tile is about the height and width of the player (The boid). Each vertex is at the center of a tile.
+Edges were generated in a similar way; by connecting each tile to an adjacent tile, so long as there were no walls in the way. 
+Unfortunately, SFML does not support ray-casting.
 
-Part one:
+## Trees
 
-1) Navigate to the HW2/P1 directory.
-2) type make into the command line
-3) type ./main into the command line
-4) When you click, velocity is updated. For example if you click in a location and then click very quickly to the right, the character will move quickly to the right.
-5) I suggest maneuvering the character by slowly moving the mouse and clicking rapidly to get a good idea of the velocity matching. Fast clicks over a large distance will speed up the boid dramatically.
+To implement decision trees and behavior trees, I had my character operate on a decision tree and then created a new character (a "monster") using a behavior tree.
+The monster's behavior was to patrol the top part of the screen, and then pathfind to the character when the character came into range. Unless the character got too far away.
+The character's behavior was to wander around pseudo-randomly. Certain rooms created patterns, such as "In room one? Go room nine" and so on. 
+These rooms were located in the north part, the idea being that the character would go and grab something in those rooms and then run away and hide in a far-away room.
+There were other decisions for both characters such as what happens when the monster reaches the character, if the character gets away, etc.
 
-Part Two:
+## Learning
 
-1) Navigate to the HW2/P2 directory.
-2) Type make into the command line
-3) type ./main into the command line
-4) Click where you want the character to arrive and align to. Probably start with the center of the screen.
-5) Repeat step four.
-
-Part Three:
-
-There are two folders for part three. For my first implementation, with the delayed wander target update that was accidental, but still works, do the following:
-
-1) Navigate to the HW2/P3Alt directory
-2) type make into the command line
-3) type ./main into the command line
-4) Watch the boid move around. This is happening due to the target being assigned every second or so.
-
-For the better wander implementation, that increases/decreases the wander target every iteration rather than assigning it every second, do the following:
-
-1) Navigate to the HW2/P3 directory
-2) Type make into the command line
-3) Type ./main into the command line
-4) Watch the boid move around. This is happening because the target is being updated every iteration.
-
-Part Four:
-
-This will look a bit weird at the start, but I promise it works.
-
-1) Navigate to the HW2/P4 directory
-2) Type make into the command line
-3) Type ./main into the command line.
-4) as the window pops up, you will see the boids moving around the screen very fast, this is how I randomize them.
-5) After 5-10 seconds, the boids will start to slow down and form groups.
-6) After that, you can really see the flocking happening.
-7) Keep watching as long as you want. Notice how the flocks form and then break apart.
-
-For P1, P2, and P3Alt, if you want to change the parameters, change the #define constants in SteeringBehavior.cpp and run make again.
-
-For P3 and P4, if you want to change the parameters, change the class constant variables in SteeringBehavior.h and run "make remake" to clean and then compile again.
+I implemented a learning algorithm that would take outputted observations (in a binary text file), and convert that into a tree.
+In my implementation, it takes the outputted behavior from the monster's behavior tree and converts it into a decision tree that produces near-identical behavior.
+I was genuinely shocked by how well I got it to work, as I can't tell any difference between the behavior tree implementation and the learned decision tree implementation.
