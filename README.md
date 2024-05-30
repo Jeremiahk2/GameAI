@@ -54,6 +54,7 @@ I used a tiling system to convert the environment into a graph. One tile is abou
 Edges were generated in a similar way; by connecting each tile to an adjacent tile, so long as there were no walls in the way. 
 Unfortunately, SFML does not support ray-casting.
 
+# Trees and Learning
 ## Trees
 
 To implement decision trees and behavior trees, I had my character operate on a decision tree and then created a new character (a "monster") using a behavior tree.
