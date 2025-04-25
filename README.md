@@ -1,5 +1,5 @@
 # Overview
-This was a semester-long project I completed individually during my third year of college. It demonstrates a variety of AI techniques in a game enviornment.
+This project demonstrates a variety of AI techniques in a game enviornment.
 The ultimate goal was to create realistic AI for a "player" and "monster" character, as well as being able to learn behavior from observed data.
 On the way, I successfully implemented a "Flocking" behavior using AI steering behaviors as well as pathfinding, environment localization and quantization.
 This project was entirely implemented and written by me. I utilized Ian Millington's book "AI for GAMES" in the following ways: Theory, mathematical formulas (entropy, information gain), and bits of pseudocode.
